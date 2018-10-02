@@ -1,6 +1,7 @@
 import click
 from ..jira.task import Task
 from requests.exceptions import HTTPError
+from ..auth.fileauth import FileAuth
 
 
 @click.group()
@@ -14,7 +15,9 @@ def cli():
 def task(title, description):
     click.echo('Adding triage task {}; {}'.format(title, description))
 
-    new_task = Task(title, description)
+    auth = FileAuth()
+
+    new_task = Task(title, description, auth)
     try:
         task_id, url = new_task.create()
         click.echo('Triage task {} added at {}'.format(task_id, url))
