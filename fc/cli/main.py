@@ -1,8 +1,7 @@
 import click
 from ..jira.task import Task
 from requests.exceptions import HTTPError
-from ..auth.fileauth import FileAuth
-from ..auth.keyboardauth import KeyboardAuth
+from ..auth.combo import ComboAuth
 
 
 @click.group()
@@ -17,11 +16,7 @@ def cli():
 def task(title, description, username):
     click.echo('Adding triage task {}; {}'.format(title, description))
 
-    auth = None
-    if username is None:
-        auth = FileAuth()
-    else:
-        auth = KeyboardAuth(username=username)
+    auth = ComboAuth(username)
 
     new_task = Task(title, description, auth)
     try:
