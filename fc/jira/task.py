@@ -11,6 +11,7 @@ class Task:
     transition_id_for_ready_for_refinement = '201'
     transition_id_for_refined = '211'
     transition_id_for_task_ready = '221'
+    issue_assigned_sprint_field = 'customfield_10005'
 
     def __init__(self, title: str, description: str, parent_story: str, in_progress: bool, auth: Auth):
         self.title = title
@@ -72,6 +73,9 @@ class Task:
                 }]
             }
 
+            json['fields'][self.issue_assigned_sprint_field] = int(
+                self._get_active_sprint_id_of_issue(self.parent_story))
+
         response = requests.post(self.api_url, json=json,
                                  auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
         response.raise_for_status()
@@ -91,6 +95,24 @@ class Task:
         response = requests.post(self.api_url + self.id + '/transitions', json=json,
                                  auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
         response.raise_for_status()
+
+    def _get_issue(self, issue_id):
+        response = requests.get(self.api_url + issue_id,
+                                auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
+        response.raise_for_status()
+
+        return response.json()
+
+    def _get_active_sprint_id_of_issue(self, issue_id):
+        issue = self._get_issue(issue_id)
+
+        sprint_list = issue['fields'][self.issue_assigned_sprint_field]
+        active_sprint = sprint_list[-1]
+        id_begin_token = 'id='
+        id_begin = active_sprint.find(id_begin_token) + len(id_begin_token)
+        id_end = active_sprint.find(',', id_begin)
+
+        return active_sprint[id_begin:id_end]
 
     def _is_triage_task(self):
         return self.parent_story is None
