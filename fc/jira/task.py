@@ -38,6 +38,12 @@ class Task:
 
         return self.id, self.url
 
+    def type_str(self) -> str:
+        if self._is_backlog_task():
+            return 'Backlog'
+        else:
+            return 'Triage'
+
     def _create(self):
         ticket_type = 'Triage Task' if self._is_triage_task() else 'Task'
 
