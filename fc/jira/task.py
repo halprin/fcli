@@ -1,6 +1,7 @@
 import requests
 from requests.auth import HTTPBasicAuth
 from ..auth.auth import Auth
+from typing import Optional
 
 
 class Task:
@@ -79,8 +80,9 @@ class Task:
                 }]
             }
 
-            json['fields'][self.issue_assigned_sprint_field] = int(
-                self._get_active_sprint_id_of_issue(self.parent_story))
+            parent_story_sprint = self._get_active_sprint_id_of_issue(self.parent_story)
+            if parent_story_sprint is not None:
+                json['fields'][self.issue_assigned_sprint_field] = parent_story_sprint
 
         response = requests.post(self.api_url, json=json,
                                  auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
@@ -102,26 +104,30 @@ class Task:
                                  auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
         response.raise_for_status()
 
-    def _get_issue(self, issue_id):
+    def _get_issue(self, issue_id) -> dict:
         response = requests.get(self.api_url + issue_id,
                                 auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
         response.raise_for_status()
 
         return response.json()
 
-    def _get_active_sprint_id_of_issue(self, issue_id):
+    def _get_active_sprint_id_of_issue(self, issue_id) -> Optional[int]:
         issue = self._get_issue(issue_id)
 
         sprint_list = issue['fields'][self.issue_assigned_sprint_field]
+
+        if sprint_list is None:
+            return None
+
         active_sprint = sprint_list[-1]
         id_begin_token = 'id='
         id_begin = active_sprint.find(id_begin_token) + len(id_begin_token)
         id_end = active_sprint.find(',', id_begin)
 
-        return active_sprint[id_begin:id_end]
+        return int(active_sprint[id_begin:id_end])
 
-    def _is_triage_task(self):
+    def _is_triage_task(self) -> bool:
         return self.parent_story is None
 
-    def _is_backlog_task(self):
+    def _is_backlog_task(self) -> bool:
         return not self._is_triage_task()
