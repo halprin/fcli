@@ -4,14 +4,13 @@ import os
 
 class EnvVarAuth(Auth):
     def __init__(self, username=None):
-        if username is None:
-            self._username = os.environ['FCLI_USER']
-        else:
-            self._username = username
-        self._password = os.environ['FCLI_PASS']
+        self._username = username
 
     def username(self):
-        return self._username
+        if self._username is None:
+            return os.environ['FCLI_USER']
+        else:
+            return self._username
 
     def password(self):
-        return self._password
+        return os.environ['FCLI_PASS']
