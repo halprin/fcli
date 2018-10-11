@@ -1,4 +1,5 @@
 from .auth import Auth
+from .envvarauth import EnvVarAuth
 from .fileauth import FileAuth
 from .keyboardauth import KeyboardAuth
 
@@ -12,15 +13,18 @@ class ComboAuth(Auth):
             return self._username
 
         try:
-            return FileAuth().username()
+            return EnvVarAuth().username()
         except Exception:
-            return KeyboardAuth().username()
+            try:
+                return FileAuth().username()
+            except Exception:
+                return KeyboardAuth().username()
 
     def password(self):
-        if self._username is not None:
-            return KeyboardAuth().password()
-
         try:
-            return FileAuth().password()
+            return EnvVarAuth().password()
         except Exception:
-            return KeyboardAuth().password()
+            try:
+                return FileAuth().password()
+            except Exception:
+                return KeyboardAuth().password()
