@@ -1,22 +1,64 @@
 # FCLI Foundational Components CLI
-- Helps spread the AwesomeSauce of the Foundational Components team a bit further.
+Helps spread the AwesomeSauce of the Foundational Components team a bit further.
 
+## Prerequisites
+[Python 3](https://www.python.org/downloads/) is required.  Python 2 is not supported.
 
-## Getting Started
-- We recommend using Python 3.
+Second, Python 3's `bin` directory needs to be in your `PATH` environment variable.  For example, on macOS, you will
+need to add the following to your `~/.profile`.
+```bash
+PATH="/Library/Frameworks/Python.framework/Versions/3.*/bin:${PATH}"
+```
 
-<code>
-cd fcli<br/>  
+## Installation
+`fcli` is located on [PyPI](https://pypi.org/project/fcli/).
 
-python3.6 setup.py install<br/>
-</code>
+To install, run the following.
+```bash
+$ pip3 install fcli
+```
 
-This will install the binary fcli in /usr/local/bin
+`sudo` may be needed if your Python 3 installation is in a protected directory.  This will put the command the `bin`
+directory of your Python 3 installation.
 
-you will need to create a ~/.fcli file with your credentials similar to the fcli.ini in the root of this repo.
+## Specifying Credentials
+`fcli` uses your EUA credentials to authenticate yourself to JIRA, etc.  There are multiple ways to specify your
+credentials.
+
+### File
+Create an ini file at `~/.fcli`.  In there, add the `[default]` section, and under that section specify a `username` and
+`password`.  An example can be seen in [fcli.ini](./fcli.ini).
+
+### Environment Variables
+The environment variables `FCLI_USER` and `FCLI_PASS` can be utilized to specify the username and password.
+
+### CLI
+Only the `username` can be specified via the CLI.  Tack on the `--username <username>` option.
+
+### Keyboard
+If the username or password is not specified in some other fashion, the CLI will prompt the user.
 
 ## Usage
 
-to add a task associated with a parent story-
+### Task Administration
+There are two types of task the `fcli` can add: triage tasks and backlog tasks.
 
-`fcli task "Task title" "Task description" <parent story ID>`
+To add a triage task,
+```bash
+$ fcli task "<task title>" "<task description>" [--in-progress]
+```
+
+A new task is created in the triage board with the specified title and description and is optionally put into the
+In Progress state.
+
+To add a backlog task,
+```bash
+$ fcli task "<task title>" "<task description>" <parent story>
+```
+
+A new task is created in the standard backlog with the specified title and description.  The task is linked with
+the parent story.  If the parent story is already in an active sprint, the task is also moved into the same sprint.
+
+## Development
+I accept PRs!  Check out the [issues](https://github.com/halprin/fcli/issues) and assign yourself when you start
+working on one.
