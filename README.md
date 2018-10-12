@@ -1,9 +1,9 @@
- - Foundational Components CLI
-Helps spread the AwesomeSauce of the Foundational Components team a bit further.
+#FCLI Foundational Components CLI
+- Helps spread the AwesomeSauce of the Foundational Components team a bit further.
 
 
 ## Getting Started
-We recommend using Python 3.
+- We recommend using Python 3.
 
 cd fcli
 python3.6 setup.py install
@@ -16,4 +16,4 @@ you will need to create a ~/.fcli file with your credentials similar to the fcli
 
 to add a task associated with a parent story-
 
-fcli task "Task title" "Task description" <parent story ID>
+```fcli task "Task title" "Task description" <parent story ID>```
