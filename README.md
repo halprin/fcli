@@ -6,7 +6,8 @@
 - We recommend using Python 3.
 
 <code>
-cd fcli<br/> 
+cd fcli<br/>  
+
 python3.6 setup.py install<br/>
 </code>
 
