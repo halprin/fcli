@@ -19,4 +19,4 @@ you will need to create a ~/.fcli file with your credentials similar to the fcli
 
 to add a task associated with a parent story-
 
-```fcli task "Task title" "Task description" <parent story ID>```
+`fcli task "Task title" "Task description" <parent story ID>`
