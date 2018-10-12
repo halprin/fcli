@@ -1,12 +1,14 @@
-## FCLI Foundational Components CLI
+# FCLI Foundational Components CLI
 - Helps spread the AwesomeSauce of the Foundational Components team a bit further.
 
 
 ## Getting Started
 - We recommend using Python 3.
 
-cd fcli
-python3.6 setup.py install
+<code>
+cd fcli<br/> 
+python3.6 setup.py install<br/>
+</code>
 
 This will install the binary fcli in /usr/local/bin
 
