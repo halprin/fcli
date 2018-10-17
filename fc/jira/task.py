@@ -14,7 +14,7 @@ class Task:
     transition_id_for_task_ready = '221'
     issue_assigned_sprint_field = 'customfield_10005'
 
-    def __init__(self, title: str, description: str, parent_story: str, in_progress: bool, auth: Auth):
+    def __init__(self, title: str, description: str, parent_story: str, in_progress: bool, no_assign: bool, auth: Auth):
         self.title = title
         self.description = description
         self.parent_story = parent_story
@@ -22,6 +22,7 @@ class Task:
         self.url = None
         self.auth = auth
         self.in_progress = in_progress
+        self.no_assign = no_assign
 
         if self._is_backlog_task():
             self.title = self.parent_story + ': ' + self.title
@@ -84,7 +85,7 @@ class Task:
             if parent_story_sprint is not None:
                 json['fields'][self.issue_assigned_sprint_field] = parent_story_sprint
 
-        if self._is_triage_task():
+        if self._is_triage_task() and not self.no_assign:
             json['fields']['assignee'] = {
                 'name': self.auth.username()
             }
