@@ -45,11 +45,12 @@ There are two types of task the `fcli` can add: triage tasks and backlog tasks.
 
 To add a triage task,
 ```bash
-$ fcli task "<task title>" "<task description>" [--in-progress]
+$ fcli task "<task title>" "<task description>" [--in-progress] [--no-assign]
 ```
 
-A new task is created in the triage board with the specified title and description and is optionally put into the
-In Progress state.
+A new task is created in the triage board with the specified title and description.  Optionally, put the task into the
+In Progress state with the `--in-progress` option, and optionally do not automatically assign the task to yourself with
+`--no-assign`.
 
 To add a backlog task,
 ```bash

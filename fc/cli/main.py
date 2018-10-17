@@ -15,12 +15,13 @@ def cli():
 @click.argument('parent_story', required=False)
 @click.option('--username')
 @click.option('--in-progress', is_flag=True)
-def task(title, description, parent_story, username, in_progress):
+@click.option('--no-assign', is_flag=True)
+def task(title, description, parent_story, username, in_progress, no_assign):
     click.echo('Adding task {}; {}'.format(title, description))
 
     auth = ComboAuth(username)
 
-    new_task = Task(title, description, parent_story, in_progress, auth)
+    new_task = Task(title, description, parent_story, in_progress, no_assign, auth)
     try:
         task_id, url = new_task.create()
         click.echo('{} task {} added at {}'.format(new_task.type_str(), task_id, url))
