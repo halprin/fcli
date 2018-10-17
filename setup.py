@@ -6,7 +6,7 @@ with open('README.md', 'r') as read_me:
 
 setup(
     name='fcli',
-    version='1.0.0',
+    version='1.1.0',
     author='halprin',
     author_email='me@halprin.io',
     description='Helps spread the AwesomeSauce of the Foundational Components team a bit further',
