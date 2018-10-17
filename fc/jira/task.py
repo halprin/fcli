@@ -84,6 +84,11 @@ class Task:
             if parent_story_sprint is not None:
                 json['fields'][self.issue_assigned_sprint_field] = parent_story_sprint
 
+        if self._is_triage_task():
+            json['fields']['assignee'] = {
+                'name': self.auth.username()
+            }
+
         response = requests.post(self.api_url, json=json,
                                  auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
         response.raise_for_status()
