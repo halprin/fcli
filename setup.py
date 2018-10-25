@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+from fc import __version__
 
 with open('README.md', 'r') as read_me:
     long_description = read_me.read()
@@ -6,7 +7,7 @@ with open('README.md', 'r') as read_me:
 
 setup(
     name='fcli',
-    version='1.1.0',
+    version=__version__,
     author='halprin',
     author_email='me@halprin.io',
     description='Helps spread the AwesomeSauce of the Foundational Components team a bit further',
