@@ -178,11 +178,11 @@ class Task:
             imp_score = 0
 
         if loe == 'High':
-            loe_score = 10
+            loe_score = 1
         elif loe == 'Medium':
             loe_score = 5
         elif loe == 'Low':
-            loe_score = 1
+            loe_score = 10
         else:
             loe_score = 0
 
