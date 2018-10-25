@@ -4,7 +4,6 @@ from requests.exceptions import HTTPError
 from ..auth.combo import ComboAuth
 from fc import __version__
 
-
 @click.group(invoke_without_command=True)
 @click.option('--version', is_flag=True, default=False)
 @click.pass_context
