@@ -1,3 +1,5 @@
+import datetime
+import re
 import requests
 from requests.auth import HTTPBasicAuth
 from ..auth.auth import Auth
@@ -7,6 +9,7 @@ from typing import Optional
 class Task:
     api_url = 'https://jira.cms.gov/rest/api/2/issue/'
     base_url = 'https://jira.cms.gov/browse/{}'
+    search_url = 'https://jira.cms.gov/rest/api/2/search?jql='
     transition_id_for_triage_ready = '11'
     transition_id_for_start_progress = '21'
     transition_id_for_ready_for_refinement = '201'
@@ -45,6 +48,14 @@ class Task:
             return 'Backlog'
         else:
             return 'Triage'
+
+    def triage_search(self) -> dict:
+        return self._search_for_triage()
+
+    def score(self, task):
+        (a, b, c) = self._find_triage_score_parts(task)
+        score = self._calc_triage_score(a, b, c)
+        self._update_triage_vfr(task['key'], score)
 
     def _create(self):
         ticket_type = 'Triage Task' if self._is_triage_task() else 'Task'
@@ -137,3 +148,74 @@ class Task:
 
     def _is_backlog_task(self) -> bool:
         return not self._is_triage_task()
+
+    def _search_for_triage(self) -> dict:
+        response = requests.get(self.search_url + 'project=qppfc+and+issueType="Triage+Task"+and+status+not+in+(resolved,closed)&fields=key,description',
+                                auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
+        response.raise_for_status()
+
+        return response
+
+    def _find_triage_score_parts(self, task) -> (str, str, str):
+        m = re.search('Importance: (.*)\\r\\n\\r\\nLOE: (.*)\\r\\n\\r\\nDate [N|n]eeded: (.*)\\r\\n\\r\\n', task['fields']['description'], re.MULTILINE)
+        if m is None:
+            return None
+        else:
+            return m.groups()
+
+    def _calc_triage_score(self, imp, loe, dt) -> int:
+        imp_score = 0
+        loe_score = 0
+        dt_score = 0
+
+        if imp == 'High':
+            imp_score = 10
+        elif imp == 'Medium':
+            imp_score = 5
+        elif imp == 'Low':
+            imp_score = 1
+        else:
+            imp_score = 0
+
+        if loe == 'High':
+            loe_score = 10
+        elif loe == 'Medium':
+            loe_score = 5
+        elif loe == 'Low':
+            loe_score = 1
+        else:
+            loe_score = 0
+
+        try:
+            dt_obj = datetime.datetime.strptime(dt, '%m/%d/%Y')
+
+            today = datetime.datetime.today()
+
+            day_diff = (today - dt_obj).days
+
+            if 0 <= day_diff and day_diff <= 7:
+                dt_score = 10
+            elif 8 <= day_diff and day_diff <= 28:
+                dt_score = 5
+            elif 29 <= day_diff and day_diff <= 60:
+                dt_score = 1
+            else:
+                dt_score = 0
+
+        except ValueError:
+            dt_score = 0
+
+        return (imp_score + loe_score + dt_score)
+
+    def _update_triage_vfr(self, issue, score):
+        json = {
+            'fields': {
+                'customfield_18402': score
+            }
+        }
+
+        # custom field for VFR = customfield_18402
+
+        response = requests.put(self.api_url + issue, json=json,
+                                 auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
+        response.raise_for_status()

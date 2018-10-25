@@ -29,3 +29,35 @@ def task(title, description, parent_story, username, in_progress, no_assign):
             click.echo('Triage task put into In Progress')
     except HTTPError as exception:
         click.echo('{} task creation failed with {}'.format(new_task.type_str(), exception))
+
+@cli.command()
+def triagesearch():
+    click.echo('searching for triage tasks')
+
+    auth = ComboAuth(None)
+
+    new_task = Task('', '', '', False, False, auth)
+
+    try:
+        tasks = new_task.triage_search()
+        click.echo('Triage tasks: {}'.format(tasks.json()))
+    except HTTPError as exception:
+        click.echo('task search failed with {}'.format(exception))
+
+@cli.command()
+def scoretriage():
+    click.echo('searching for triage tasks')
+
+    auth = ComboAuth(None)
+
+    new_task = Task('', '', '', False, False, auth)
+
+    try:
+        tasks = new_task.triage_search()
+        click.echo('Triage tasks: {}'.format(tasks.json()))
+        for task in tasks.json()['issues']:
+            click.echo('Generating score for task {}'.format(task['key']))
+            new_task.score(task)
+            click.echo('Triage task VFR updated for {}'.format(task['key']))
+    except HTTPError as exception:
+        click.echo('task search failed with {}'.format(exception))
