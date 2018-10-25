@@ -191,9 +191,9 @@ class Task:
 
             today = datetime.datetime.today()
 
-            day_diff = (today - dt_obj).days
+            day_diff = (dt_obj - today).days
 
-            if 0 <= day_diff and day_diff <= 7:
+            if day_diff <= 7:
                 dt_score = 10
             elif 8 <= day_diff and day_diff <= 28:
                 dt_score = 5
