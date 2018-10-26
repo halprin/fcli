@@ -159,7 +159,7 @@ class Task:
     def _find_triage_score_parts(self, task) -> (str, str, str):
         m = re.search('Importance: (.*)\\r\\n\\r\\nLOE: (.*)\\r\\n\\r\\nDate [N|n]eeded: (.*)\\r\\n\\r\\n', task['fields']['description'], re.MULTILINE)
         if m is None:
-            return None
+            return (None, None, None)
         else:
             return m.groups()
 
@@ -187,20 +187,25 @@ class Task:
             loe_score = 0
 
         try:
-            dt_obj = datetime.datetime.strptime(dt, '%m/%d/%Y')
-
-            today = datetime.datetime.today()
-
-            day_diff = (dt_obj - today).days
-
-            if day_diff <= 7:
-                dt_score = 10
-            elif 8 <= day_diff and day_diff <= 28:
-                dt_score = 5
-            elif 29 <= day_diff and day_diff <= 60:
-                dt_score = 1
-            else:
+            if dt is None:
                 dt_score = 0
+            else:
+                dt_obj = datetime.datetime.strptime(dt, '%m/%d/%Y')
+
+                today = datetime.datetime.today()
+
+                day_diff = (dt_obj - today).days
+
+                if day_diff <= 7:
+                    dt_score = 20
+                elif 8 <= day_diff and day_diff <= 14:
+                    dt_score = 15
+                elif 15 <= day_diff and day_diff <= 28:
+                    dt_score = 10
+                elif 29 <= day_diff and day_diff <= 42:
+                    dt_score = 5
+                else:
+                    dt_score = 0
 
         except ValueError:
             dt_score = 0
