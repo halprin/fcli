@@ -41,11 +41,14 @@ If the username or password is not specified in some other fashion, the CLI will
 ## Usage
 
 ### Task Administration
+
+#### Task Creation
+
 There are two types of task the `fcli` can add: triage tasks and backlog tasks.
 
 To add a triage task,
 ```bash
-$ fcli task "<task title>" "<task description>" [--in-progress] [--no-assign]
+$ fcli triage task "<task title>" "<task description>" [--in-progress] [--no-assign]
 ```
 
 A new task is created in the triage board with the specified title and description.  Optionally, put the task into the
@@ -54,26 +57,26 @@ In Progress state with the `--in-progress` option, and optionally do not automat
 
 To add a backlog task,
 ```bash
-$ fcli task "<task title>" "<task description>" <parent story>
+$ fcli backlog task "<task title>" "<task description>" <parent story>
 ```
 
 A new task is created in the standard backlog with the specified title and description.  The task is linked with
 the parent story.  If the parent story is already in an active sprint, the task is also moved into the same sprint.
 
----
+#### Triage Task Administration
 
 There are currently two different tasks for triage administration: search for all open triage tasks and update the score for all open triage tasks.
 
 To search for all open triage tasks,
 ```bash
-$ fcli triagesearch
+$ fcli triage search
 ```
 
 A json representation of all of the open triage tasks will be printed to the terminal.
 
 To run the triage scoring process,
 ```bash
-$ fcli scoretriage
+$ fcli triage score
 ```
 
 The scores of all open triage tasks will be updated. The terminal will show progress.
