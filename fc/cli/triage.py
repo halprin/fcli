@@ -1,5 +1,7 @@
 import click
+import json
 from ..jira.task import Task
+from ..jira import tasks
 from requests.exceptions import HTTPError
 from ..auth.combo import ComboAuth
 
@@ -30,33 +32,28 @@ def create(title, description, username, in_progress, no_assign):
 @triage.command()
 @click.option('--username')
 def search(username):
-    click.echo('searching for triage tasks')
+    click.echo('Searching for triage tasks')
 
     auth = ComboAuth(username)
 
-    new_task = Task('', '', '', False, False, auth)
-
     try:
-        tasks = new_task.triage_search()
-        click.echo('Triage tasks: {}'.format(tasks.json()))
+        triage_tasks = tasks.triage_search(auth)
+        click.echo('Triage tasks: {}'.format(json.dumps(triage_tasks.json(), indent=4)))
     except HTTPError as exception:
-        click.echo('task search failed with {}'.format(exception))
+        click.echo('Task search failed with {}'.format(exception))
 
 @triage.command()
 @click.option('--username')
 def score(username):
-    click.echo('searching for triage tasks')
+    click.echo('Scoring triage tasks')
 
     auth = ComboAuth(username)
 
-    new_task = Task('', '', '', False, False, auth)
-
     try:
-        tasks = new_task.triage_search()
-        click.echo('Triage tasks: {}'.format(tasks.json()))
-        for task in tasks.json()['issues']:
+        triage_tasks = tasks.triage_search(auth)
+        for task in triage_tasks.json()['issues']:
             click.echo('Generating score for task {}'.format(task['key']))
-            new_task.score(task)
+            tasks.score(task, auth)
             click.echo('Triage task VFR updated for {}'.format(task['key']))
     except HTTPError as exception:
-        click.echo('task search failed with {}'.format(exception))
+        click.echo('Task search failed with {}'.format(exception))
