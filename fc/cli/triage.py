@@ -25,13 +25,11 @@ def create(title, description, username, in_progress, no_assign):
     new_task = Task(title, description, None, in_progress, no_assign, auth)
     try:
         task_id, url = new_task.create()
-        click.echo('{} task {} added at {}'.
-                   format(new_task.type_str(), task_id, url))
+        click.echo('{} task {} added at {}'.format(new_task.type_str(), task_id, url))
         if in_progress:
             click.echo('Triage task put into In Progress')
     except HTTPError as exception:
-        click.echo('{} task creation failed with {}'.
-                   format(new_task.type_str(), exception))
+        click.echo('{} task creation failed with {}'.format(new_task.type_str(), exception))
 
 
 @triage.command()
@@ -43,8 +41,7 @@ def search(username):
 
     try:
         triage_tasks = tasks.triage_search(auth)
-        click.echo('Triage tasks: {}'.
-                   format(json.dumps(triage_tasks.json(), indent=4)))
+        click.echo('Triage tasks: {}'.format(json.dumps(triage_tasks.json(), indent=4)))
     except HTTPError as exception:
         click.echo('Task search failed with {}'.format(exception))
 

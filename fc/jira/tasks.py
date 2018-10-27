@@ -38,22 +38,19 @@ def score(task, auth):
 
 
 def _search_for_triage(auth) -> dict:
-    search_ext = 'project=qppfc+and+issueType="Triage+Task"+and+status+not+in+'
-    + '(resolved,closed)&fields=key,description'
+    search_ext = 'project=qppfc+and+issueType="Triage+Task"+and+status+not+in+(resolved,closed)&fields=key,description'
 
     response = requests.get(search_url + search_ext,
-                            auth=HTTPBasicAuth(auth.username(),
-                                               auth.password()))
+                            auth=HTTPBasicAuth(auth.username(), auth.password()))
     response.raise_for_status()
 
     return response
 
 
 def _find_triage_score_parts(task) -> (str, str, str):
-    regex = 'Importance: (.*)\\r\\n\\r\\nLOE: (.*)\\r\\n\\r\\nDate [N|n]eeded:'
-    + ' (.*)\\r\\n\\r\\n'
+    regex = 'Importance: (.*)\\r\\n\\r\\nLOE: (.*)\\r\\n\\r\\nDate [N|n]eeded: (.*)\\r\\n\\r\\n'
 
-    m = re.search(, task['fields']['description'], re.MULTILINE)
+    m = re.search(regex, task['fields']['description'], re.MULTILINE)
     if m is None:
         return (None, None, None)
     else:
@@ -93,8 +90,7 @@ def _update_triage_vfr(issue, score, auth):
     # custom field for VFR = customfield_18402
 
     response = requests.put(Task.api_url + issue, json=json,
-                            auth=HTTPBasicAuth(auth.username(),
-                                               auth.password()))
+                            auth=HTTPBasicAuth(auth.username(), auth.password()))
     response.raise_for_status()
 
 

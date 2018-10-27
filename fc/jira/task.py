@@ -16,8 +16,7 @@ class Task:
     transition_id_for_task_ready = '221'
     issue_assigned_sprint_field = 'customfield_10005'
 
-    def __init__(self, title: str, description: str, parent_story: str,
-                 in_progress: bool, no_assign: bool, auth: Auth):
+    def __init__(self, title: str, description: str, parent_story: str, in_progress: bool, no_assign: bool, auth: Auth):
         self.title = title
         self.description = description
         self.parent_story = parent_story
@@ -84,11 +83,9 @@ class Task:
                 }]
             }
 
-            parent_story_sprint =
-            self._get_active_sprint_id_of_issue(self.parent_story)
+            parent_story_sprint = self._get_active_sprint_id_of_issue(self.parent_story)
             if parent_story_sprint is not None:
-                json['fields'][self.issue_assigned_sprint_field] =
-                parent_story_sprint
+                json['fields'][self.issue_assigned_sprint_field] = parent_story_sprint
 
         if self._is_triage_task() and not self.no_assign:
             json['fields']['assignee'] = {
@@ -96,8 +93,7 @@ class Task:
             }
 
         response = requests.post(self.api_url, json=json,
-                                 auth=HTTPBasicAuth(self.auth.username(),
-                                                    self.auth.password()))
+                                 auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
         response.raise_for_status()
 
         response_json = response.json()
@@ -112,16 +108,13 @@ class Task:
             }
         }
 
-        response = requests.post(self.api_url + self.id + '/transitions',
-                                 json=json,
-                                 auth=HTTPBasicAuth(self.auth.username(),
-                                                    self.auth.password()))
+        response = requests.post(self.api_url + self.id + '/transitions', json=json,
+                                 auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
         response.raise_for_status()
 
     def _get_issue(self, issue_id) -> dict:
         response = requests.get(self.api_url + issue_id,
-                                auth=HTTPBasicAuth(self.auth.username(),
-                                                   self.auth.password()))
+                                auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
         response.raise_for_status()
 
         return response.json()
