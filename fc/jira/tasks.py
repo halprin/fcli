@@ -26,27 +26,39 @@ date_dict = {
     (29, 42): 5
 }
 
+
 def triage_search(auth) -> dict:
     return _search_for_triage(auth)
+
 
 def score(task, auth):
     (imp_part, loe_part, date_part) = _find_triage_score_parts(task)
     score = _calc_triage_score(imp_part, loe_part, date_part)
     _update_triage_vfr(task['key'], score, auth)
 
+
 def _search_for_triage(auth) -> dict:
-    response = requests.get(search_url + 'project=qppfc+and+issueType="Triage+Task"+and+status+not+in+(resolved,closed)&fields=key,description',
-                            auth=HTTPBasicAuth(auth.username(), auth.password()))
+    search_ext = 'project=qppfc+and+issueType="Triage+Task"+and+status+not+in+'
+    + '(resolved,closed)&fields=key,description'
+
+    response = requests.get(search_url + search_ext,
+                            auth=HTTPBasicAuth(auth.username(),
+                                               auth.password()))
     response.raise_for_status()
 
     return response
 
+
 def _find_triage_score_parts(task) -> (str, str, str):
-    m = re.search('Importance: (.*)\\r\\n\\r\\nLOE: (.*)\\r\\n\\r\\nDate [N|n]eeded: (.*)\\r\\n\\r\\n', task['fields']['description'], re.MULTILINE)
+    regex = 'Importance: (.*)\\r\\n\\r\\nLOE: (.*)\\r\\n\\r\\nDate [N|n]eeded:'
+    + ' (.*)\\r\\n\\r\\n'
+
+    m = re.search(, task['fields']['description'], re.MULTILINE)
     if m is None:
         return (None, None, None)
     else:
         return m.groups()
+
 
 def _calc_triage_score(imp_part, loe_part, date_part) -> int:
 
@@ -70,6 +82,7 @@ def _calc_triage_score(imp_part, loe_part, date_part) -> int:
 
     return (imp_score + loe_score + dt_score)
 
+
 def _update_triage_vfr(issue, score, auth):
     json = {
         'fields': {
@@ -80,8 +93,10 @@ def _update_triage_vfr(issue, score, auth):
     # custom field for VFR = customfield_18402
 
     response = requests.put(Task.api_url + issue, json=json,
-                             auth=HTTPBasicAuth(auth.username(), auth.password()))
+                            auth=HTTPBasicAuth(auth.username(),
+                                               auth.password()))
     response.raise_for_status()
+
 
 def _get_date_score(num_days) -> int:
 
