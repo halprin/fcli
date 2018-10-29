@@ -10,8 +10,7 @@ setup(
     version=__version__,
     author='halprin',
     author_email='me@halprin.io',
-    description='Helps spread the AwesomeSauce of the Foundational Components '
-                + 'team a bit further',
+    description='Helps spread the AwesomeSauce of the Foundational Components team a bit further',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/halprin/fcli',

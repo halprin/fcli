@@ -1,5 +1,3 @@
-import datetime
-import re
 import requests
 from requests.auth import HTTPBasicAuth
 from ..auth.auth import Auth
