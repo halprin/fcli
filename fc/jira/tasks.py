@@ -2,21 +2,26 @@ import datetime
 import re
 import requests
 from requests.auth import HTTPBasicAuth
-from ..auth.auth import Auth
 from .task import Task
 
 search_url = 'https://jira.cms.gov/rest/api/2/search?jql='
 
 importance_dict = {
     'High': 10,
+    'high': 10,
     'Medium': 5,
-    'Low': 1
+    'medium': 5,
+    'Low': 1,
+    'low': 1
 }
 
 loe_dict = {
     'High': 1,
+    'high': 1,
     'Medium': 5,
-    'Low': 10
+    'medium': 5,
+    'Low': 10,
+    'low': 10
 }
 
 date_dict = {

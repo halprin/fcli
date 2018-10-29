@@ -23,6 +23,7 @@ setup(
     install_requires=[
         'click',
         'requests',
+        'click-datetime',
     ],
     entry_points='''
         [console_scripts]

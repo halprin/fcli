@@ -2,6 +2,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 from ..auth.auth import Auth
 from typing import Optional
+from datetime import datetime
 
 
 class Task:
@@ -14,7 +15,8 @@ class Task:
     transition_id_for_task_ready = '221'
     issue_assigned_sprint_field = 'customfield_10005'
 
-    def __init__(self, title: str, description: str, parent_story: str, in_progress: bool, no_assign: bool, auth: Auth):
+    def __init__(self, title: str, description: str, parent_story: Optional[str], in_progress: bool, no_assign: bool,
+                 auth: Auth, importance: str, level_of_importance: str, due_date: datetime):
         self.title = title
         self.description = description
         self.parent_story = parent_story
@@ -23,9 +25,15 @@ class Task:
         self.auth = auth
         self.in_progress = in_progress
         self.no_assign = no_assign
+        self.importance = importance
+        self.level_of_importance = level_of_importance
+        self.due_date = due_date
 
         if self._is_backlog_task():
             self.title = self.parent_story + ': ' + self.title
+
+        if importance is not None and level_of_importance is not None and due_date is not None:
+            self._modify_description_for_parameters(self.importance, self.level_of_importance, self.due_date)
 
     def create(self):
         self._create()
@@ -137,3 +145,8 @@ class Task:
 
     def _is_backlog_task(self) -> bool:
         return not self._is_triage_task()
+
+    def _modify_description_for_parameters(self, importance: str, level_of_importance: str, due_date: datetime):
+        additional_description = 'Importance: {}\r\n\r\nLOE: {}\r\n\r\nDate needed: {}'\
+            .format(importance, level_of_importance, due_date.strftime('%m/%d/%Y'))
+        self.description = self.description + '\r\n\r\n' + additional_description + '\r\n\r\n'

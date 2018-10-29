@@ -4,6 +4,7 @@ from ..jira.task import Task
 from ..jira import tasks
 from requests.exceptions import HTTPError
 from ..auth.combo import ComboAuth
+import click_datetime
 
 
 @click.group()
@@ -17,12 +18,15 @@ def triage():
 @click.option('--username')
 @click.option('--in-progress', is_flag=True)
 @click.option('--no-assign', is_flag=True)
-def create(title, description, username, in_progress, no_assign):
+@click.option('--importance', prompt=True, type=click.Choice(['Low', 'Medium', 'High'], case_sensitive=False))
+@click.option('--loe', prompt='Level of Effort', type=click.Choice(['Low', 'Medium', 'High'], case_sensitive=False))
+@click.option('--due', prompt='Due date (mm/dd/YYYY)', type=click_datetime.Datetime(format='%m/%d/%Y'))
+def create(title, description, username, in_progress, no_assign, importance, loe, due):
     click.echo('Adding task {}; {}'.format(title, description))
 
     auth = ComboAuth(username)
 
-    new_task = Task(title, description, None, in_progress, no_assign, auth)
+    new_task = Task(title, description, None, in_progress, no_assign, auth, importance, loe, due)
     try:
         task_id, url = new_task.create()
         click.echo('{} task {} added at {}'.format(new_task.type_str(), task_id, url))
