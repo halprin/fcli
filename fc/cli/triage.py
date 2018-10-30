@@ -1,6 +1,6 @@
 import click
 import json
-from ..jira.task import Task
+from ..jira.triage_task import TriageTask
 from ..jira import tasks
 from requests.exceptions import HTTPError
 from ..auth.combo import ComboAuth
@@ -22,18 +22,18 @@ def triage():
 @click.option('--loe', prompt='Level of Effort', type=click.Choice(['Low', 'Medium', 'High'], case_sensitive=False))
 @click.option('--due', prompt='Due date (mm/dd/YYYY)', type=click_datetime.Datetime(format='%m/%d/%Y'))
 def create(title, description, username, in_progress, no_assign, importance, loe, due):
-    click.echo('Adding task {}; {}'.format(title, description))
+    click.echo('Adding triage task {}; {}'.format(title, description))
 
     auth = ComboAuth(username)
 
-    new_task = Task(title, description, None, in_progress, no_assign, auth, importance, loe, due)
+    new_task = TriageTask(title, description, in_progress, no_assign, importance, loe, due, auth)
     try:
         task_id, url = new_task.create()
-        click.echo('{} task {} added at {}'.format(new_task.type_str(), task_id, url))
+        click.echo('Triage task {} added at {}'.format(task_id, url))
         if in_progress:
             click.echo('Triage task put into In Progress')
     except HTTPError as exception:
-        click.echo('{} task creation failed with {}'.format(new_task.type_str(), exception))
+        click.echo('Triage task creation failed with {}'.format(exception))
 
 
 @triage.command()

@@ -15,48 +15,14 @@ class Task:
     transition_id_for_task_ready = '221'
     issue_assigned_sprint_field = 'customfield_10005'
 
-    def __init__(self, title: str, description: str, parent_story: Optional[str], in_progress: bool, no_assign: bool,
-                 auth: Auth, importance: str, level_of_importance: str, due_date: datetime):
+    def __init__(self, title: str, description: str, auth: Auth):
         self.title = title
         self.description = description
-        self.parent_story = parent_story
         self.id = None
         self.url = None
         self.auth = auth
-        self.in_progress = in_progress
-        self.no_assign = no_assign
-        self.importance = importance
-        self.level_of_importance = level_of_importance
-        self.due_date = due_date
-
-        if self._is_backlog_task():
-            self.title = self.parent_story + ': ' + self.title
-
-        if importance is not None and level_of_importance is not None and due_date is not None:
-            self._modify_description_for_parameters(self.importance, self.level_of_importance, self.due_date)
 
     def create(self):
-        self._create()
-
-        if self.in_progress and self._is_triage_task():
-            self._transition(self.transition_id_for_triage_ready)
-            self._transition(self.transition_id_for_start_progress)
-        elif self._is_backlog_task():
-            self._transition(self.transition_id_for_ready_for_refinement)
-            self._transition(self.transition_id_for_refined)
-            self._transition(self.transition_id_for_task_ready)
-
-        return self.id, self.url
-
-    def type_str(self) -> str:
-        if self._is_backlog_task():
-            return 'Backlog'
-        else:
-            return 'Triage'
-
-    def _create(self):
-        ticket_type = 'Triage Task' if self._is_triage_task() else 'Task'
-
         json = {
             'fields': {
                 'project': {
@@ -64,39 +30,13 @@ class Task:
                 },
                 'summary': self.title,
                 'description': self.description,
-                'issuetype': {
-                    'name': ticket_type
-                },
                 'components': [{
                     'name': 'Foundational'
                 }]
             }
         }
 
-        if self._is_backlog_task():
-            json['update'] = {
-                'issuelinks': [{
-                    'add': {
-                        'type': {
-                            'name': 'Implements',
-                            'inward': 'is implemented by',
-                            'outward': 'implements'
-                        },
-                        'outwardIssue': {
-                            'key': self.parent_story
-                        }
-                    }
-                }]
-            }
-
-            parent_story_sprint = self._get_active_sprint_id_of_issue(self.parent_story)
-            if parent_story_sprint is not None:
-                json['fields'][self.issue_assigned_sprint_field] = parent_story_sprint
-
-        if self._is_triage_task() and not self.no_assign:
-            json['fields']['assignee'] = {
-                'name': self.auth.username()
-            }
+        self._extra_json_for_create(json)
 
         response = requests.post(self.api_url, json=json,
                                  auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
@@ -106,6 +46,14 @@ class Task:
 
         self.id = response_json['key']
         self.url = self.base_url.format(self.id)
+
+        return self.id, self.url
+
+    def _extra_json_for_create(self, existing_json: dict):
+        raise NotImplementedError
+
+    def type_str(self) -> str:
+        raise NotImplementedError
 
     def _transition(self, id_of_transition: str):
         json = {
@@ -139,14 +87,3 @@ class Task:
         id_end = active_sprint.find(',', id_begin)
 
         return int(active_sprint[id_begin:id_end])
-
-    def _is_triage_task(self) -> bool:
-        return self.parent_story is None
-
-    def _is_backlog_task(self) -> bool:
-        return not self._is_triage_task()
-
-    def _modify_description_for_parameters(self, importance: str, level_of_importance: str, due_date: datetime):
-        additional_description = 'Importance: {}\r\n\r\nLOE: {}\r\n\r\nDate needed: {}'\
-            .format(importance, level_of_importance, due_date.strftime('%m/%d/%Y'))
-        self.description = self.description + '\r\n\r\n' + additional_description + '\r\n\r\n'
