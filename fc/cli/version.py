@@ -3,4 +3,4 @@ from fc import __version__
 
 @click.command()	
 def version():	
-    print(__version__)
+    click.echo(__version__)
