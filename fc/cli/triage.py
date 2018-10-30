@@ -19,14 +19,14 @@ def triage():
 @click.option('--in-progress', is_flag=True)
 @click.option('--no-assign', is_flag=True)
 @click.option('--importance', prompt=True, type=click.Choice(['Low', 'Medium', 'High'], case_sensitive=False))
-@click.option('--loe', prompt='Level of Effort', type=click.Choice(['Low', 'Medium', 'High'], case_sensitive=False))
-@click.option('--due', prompt='Due date (mm/dd/YYYY)', type=click_datetime.Datetime(format='%m/%d/%Y'))
-def create(title, description, username, in_progress, no_assign, importance, loe, due):
+@click.option('--effort', prompt='Level of Effort', type=click.Choice(['Low', 'Medium', 'High'], case_sensitive=False))
+@click.option('--due', prompt='Due date (mm/dd/yyyy)', type=click_datetime.Datetime(format='%m/%d/%Y'))
+def create(title, description, username, in_progress, no_assign, importance, effort, due):
     click.echo('Adding triage task {}; {}'.format(title, description))
 
     auth = ComboAuth(username)
 
-    new_task = TriageTask(title, description, in_progress, no_assign, importance, loe, due, auth)
+    new_task = TriageTask(title, description, in_progress, no_assign, importance, effort, due, auth)
     try:
         task_id, url = new_task.create()
         click.echo('Triage task {} added at {}'.format(task_id, url))

@@ -14,7 +14,7 @@ def backlog():
 @click.argument('description')
 @click.argument('parent_story')
 @click.option('--username')
-def task(title, description, parent_story, username):
+def create(title, description, parent_story, username):
     click.echo('Adding backlog task {}; {}'.format(title, description))
 
     auth = ComboAuth(username)

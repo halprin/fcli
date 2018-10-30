@@ -4,8 +4,8 @@ Helps spread the AwesomeSauce of the Foundational Components team a bit further.
 ## Prerequisites
 [Python 3](https://www.python.org/downloads/) is required.  Python 2 is not supported.
 
-Second, Python 3's `bin` directory needs to be in your `PATH` environment variable.  For example, on macOS, you will
-need to add the following to your `~/.profile`.
+Second, Python 3's `bin` directory needs to be in your `PATH` environment variable.  For example, if you are using the
+python.org install on macOS, you will need to add the following to your `~/.profile`.
 ```bash
 PATH="/Library/Frameworks/Python.framework/Versions/3.*/bin:${PATH}"
 ```
@@ -20,6 +20,13 @@ $ pip3 install fcli
 
 `sudo` may be needed if your Python 3 installation is in a protected directory.  This will put the command the `bin`
 directory of your Python 3 installation.
+
+To update `fcli` to the latest version, run the following.
+```bash
+$ pip3 install --upgrade fcli
+```
+
+Again, `sudo` may be required.
 
 ## Specifying Credentials
 `fcli` uses your EUA credentials to authenticate yourself to JIRA, etc.  There are multiple ways to specify your
@@ -48,16 +55,17 @@ There are two types of task the `fcli` can add: triage tasks and backlog tasks.
 
 To add a triage task,
 ```bash
-$ fcli triage task "<task title>" "<task description>" [--in-progress] [--no-assign]
+$ fcli triage create "<task title>" "<task description>"  [--importance <High/Medium/Low>] [--effort <High/Medium/Low>] [--due <date in the future>] [--in-progress] [--no-assign]
 ```
 
 A new task is created in the triage board with the specified title and description.  Optionally, put the task into the
 In Progress state with the `--in-progress` option, and optionally do not automatically assign the task to yourself with
-`--no-assign`.
+`--no-assign`.  The importance, effort, and due date are required, and they will be prompted for if they are not
+supplied on the command line.
 
 To add a backlog task,
 ```bash
-$ fcli backlog task "<task title>" "<task description>" <parent story>
+$ fcli backlog create "<task title>" "<task description>" <parent story>
 ```
 
 A new task is created in the standard backlog with the specified title and description.  The task is linked with
