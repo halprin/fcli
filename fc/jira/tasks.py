@@ -2,7 +2,10 @@ import datetime
 import re
 import requests
 from requests.auth import HTTPBasicAuth
+from ..auth.auth import Auth
 from .task import Task
+from typing import Tuple, Optional
+
 
 search_url = 'https://jira.cms.gov/rest/api/2/search?jql='
 
@@ -32,11 +35,11 @@ date_dict = {
 }
 
 
-def triage_search(auth) -> dict:
+def triage_search(auth: Auth) -> dict:
     return _search_for_triage(auth)
 
 
-def score(task, auth):
+def score(task, auth: Auth):
     (imp_part, loe_part, date_part) = _find_triage_score_parts(task)
     score = _calc_triage_score(imp_part, loe_part, date_part)
     _update_triage_vfr(task['key'], score, auth)
@@ -52,7 +55,7 @@ def _search_for_triage(auth) -> dict:
     return response
 
 
-def _find_triage_score_parts(task) -> (str, str, str):
+def _find_triage_score_parts(task: dict) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     regex = 'Importance: (.*)\\r\\n\\r\\nLOE: (.*)\\r\\n\\r\\nDate [N|n]eeded: (.*)\\r\\n\\r\\n'
 
     m = re.search(regex, task['fields']['description'], re.MULTILINE)
@@ -62,7 +65,7 @@ def _find_triage_score_parts(task) -> (str, str, str):
         return m.groups()
 
 
-def _calc_triage_score(imp_part, loe_part, date_part) -> int:
+def _calc_triage_score(imp_part: str, loe_part: str, date_part: str) -> int:
 
     dt_score = 0
 
@@ -82,10 +85,10 @@ def _calc_triage_score(imp_part, loe_part, date_part) -> int:
     except (ValueError, TypeError):
         dt_score = 0
 
-    return (imp_score + loe_score + dt_score)
+    return imp_score + loe_score + dt_score
 
 
-def _update_triage_vfr(issue, score, auth):
+def _update_triage_vfr(issue: str, score: int, auth: Auth):
     json = {
         'fields': {
             'customfield_18402': score
@@ -99,7 +102,7 @@ def _update_triage_vfr(issue, score, auth):
     response.raise_for_status()
 
 
-def _get_date_score(num_days) -> int:
+def _get_date_score(num_days: int) -> int:
 
     for key in date_dict:
         if key[0] <= num_days <= key[1]:

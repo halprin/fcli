@@ -107,7 +107,7 @@ class Task:
         self.id = response_json['key']
         self.url = self.base_url.format(self.id)
 
-    def _transition(self, id_of_transition):
+    def _transition(self, id_of_transition: str):
         json = {
             'transition': {
                 'id': id_of_transition
@@ -118,14 +118,14 @@ class Task:
                                  auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
         response.raise_for_status()
 
-    def _get_issue(self, issue_id) -> dict:
+    def _get_issue(self, issue_id: str) -> dict:
         response = requests.get(self.api_url + issue_id,
                                 auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
         response.raise_for_status()
 
         return response.json()
 
-    def _get_active_sprint_id_of_issue(self, issue_id) -> Optional[int]:
+    def _get_active_sprint_id_of_issue(self, issue_id: str) -> Optional[int]:
         issue = self._get_issue(issue_id)
 
         sprint_list = issue['fields'][self.issue_assigned_sprint_field]
