@@ -1,7 +1,4 @@
 import click
-from ..jira.task import Task
-from requests.exceptions import HTTPError
-from ..auth.combo import ComboAuth
 from fc import __version__
 from . import triage
 from . import backlog
