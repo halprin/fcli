@@ -1,6 +1,7 @@
 from .task import Task
 from datetime import datetime
 from ..auth.auth import Auth
+from . import tasks
 
 
 class TriageTask(Task):
@@ -18,6 +19,8 @@ class TriageTask(Task):
 
     def create(self):
         super(TriageTask, self).create()
+
+        self._update_vfr()
 
         if self.in_progress:
             self._transition(self.transition_id_for_triage_ready)
@@ -42,3 +45,7 @@ class TriageTask(Task):
         additional_description = 'Importance: {}\r\n\r\nLOE: {}\r\n\r\nDate needed: {}'\
             .format(importance, level_of_importance, due_date.strftime('%m/%d/%Y'))
         self.description = self.description + '\r\n\r\n' + additional_description + '\r\n\r\n'
+
+    def _update_vfr(self):
+        issue_json = self._get_issue(self.id)
+        tasks.score(issue_json, self.auth)
