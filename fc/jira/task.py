@@ -2,7 +2,6 @@ import requests
 from requests.auth import HTTPBasicAuth
 from ..auth.auth import Auth
 from typing import Optional
-from datetime import datetime
 
 
 class Task:

@@ -45,7 +45,7 @@ def search(username):
 
     try:
         triage_tasks = tasks.triage_search(auth)
-        click.echo('Triage tasks: {}'.format(json.dumps(triage_tasks.json(), indent=4)))
+        click.echo('Triage tasks: {}'.format(json.dumps(triage_tasks, indent=4)))
     except HTTPError as exception:
         click.echo('Task search failed with {}'.format(exception))
 
@@ -59,7 +59,7 @@ def score(username):
 
     try:
         triage_tasks = tasks.triage_search(auth)
-        for task in triage_tasks.json()['issues']:
+        for task in triage_tasks['issues']:
             click.echo('Generating score for task {}'.format(task['key']))
             tasks.score(task, auth)
             click.echo('Triage task VFR updated for {}'.format(task['key']))

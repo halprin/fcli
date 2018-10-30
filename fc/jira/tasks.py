@@ -39,26 +39,25 @@ def triage_search(auth: Auth) -> dict:
     return _search_for_triage(auth)
 
 
-def score(task, auth: Auth):
-    (imp_part, loe_part, date_part) = _find_triage_score_parts(task)
+def score(task_json: dict, auth: Auth):
+    (imp_part, loe_part, date_part) = _find_triage_score_parts(task_json)
     score = _calc_triage_score(imp_part, loe_part, date_part)
-    _update_triage_vfr(task['key'], score, auth)
+    _update_triage_vfr(task_json['key'], score, auth)
 
 
-def _search_for_triage(auth) -> dict:
+def _search_for_triage(auth: Auth) -> dict:
     search_ext = 'project=qppfc+and+issueType="Triage+Task"+and+status+not+in+(resolved,closed)&fields=key,description'
 
-    response = requests.get(search_url + search_ext,
-                            auth=HTTPBasicAuth(auth.username(), auth.password()))
+    response = requests.get(search_url + search_ext, auth=HTTPBasicAuth(auth.username(), auth.password()))
     response.raise_for_status()
 
-    return response
+    return response.json()
 
 
-def _find_triage_score_parts(task: dict) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+def _find_triage_score_parts(task_json: dict) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     regex = 'Importance: (.*)\\r\\n\\r\\nLOE: (.*)\\r\\n\\r\\nDate [N|n]eeded: (.*)\\r\\n\\r\\n'
 
-    m = re.search(regex, task['fields']['description'], re.MULTILINE)
+    m = re.search(regex, task_json['fields']['description'], re.MULTILINE)
     if m is None:
         return (None, None, None)
     else:
@@ -97,8 +96,7 @@ def _update_triage_vfr(issue: str, score: int, auth: Auth):
 
     # custom field for VFR = customfield_18402
 
-    response = requests.put(Task.api_url + issue, json=json,
-                            auth=HTTPBasicAuth(auth.username(), auth.password()))
+    response = requests.put(Task.api_url + issue, json=json, auth=HTTPBasicAuth(auth.username(), auth.password()))
     response.raise_for_status()
 
 
