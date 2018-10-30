@@ -9,6 +9,7 @@ from . import version
 def cli():
     pass
 
+
 cli.add_command(triage.triage)
 cli.add_command(backlog.backlog)
 cli.add_command(version.version)
