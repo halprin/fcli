@@ -39,10 +39,11 @@ def triage_search(auth: Auth) -> dict:
     return _search_for_triage(auth)
 
 
-def score(task_json: dict, auth: Auth):
+def score(task_json: dict, auth: Auth) -> int:
     (imp_part, loe_part, date_part) = _find_triage_score_parts(task_json)
     score = _calc_triage_score(imp_part, loe_part, date_part)
     _update_triage_vfr(task_json['key'], score, auth)
+    return score
 
 
 def _search_for_triage(auth: Auth) -> dict:
@@ -79,7 +80,10 @@ def _calc_triage_score(imp_part: str, loe_part: str, date_part: str) -> int:
 
         day_diff = (dt_obj - today).days
 
-        dt_score = _get_date_score(day_diff)
+        if day_diff < 0:
+            dt_score = 20
+        else:
+            dt_score = _get_date_score(day_diff)
 
     except (ValueError, TypeError):
         dt_score = 0
