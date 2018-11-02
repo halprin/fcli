@@ -3,6 +3,17 @@ from ..auth.auth import Auth
 
 
 class BacklogTask(Task):
+
+    def __init__(self, json: dict, auth: Auth):
+        super(BacklogTask, self).__init__(json, auth)
+
+        issue_links = json['fields']['issue_links']
+
+        for issue_link in issue_links:
+            if issue_link['type']['id'] == '10603':
+                self.parent_story = issue_link['outwardIssue']['key']
+                break
+
     def __init__(self, title: str, description: str, parent_story: str, auth: Auth):
         super(BacklogTask, self).__init__(title, description, auth)
 

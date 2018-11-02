@@ -1,3 +1,4 @@
+from fc.jira import tasks
 from .task import Task
 from datetime import datetime
 from ..auth.auth import Auth
@@ -5,6 +6,10 @@ from . import tasks
 
 
 class TriageTask(Task):
+
+    def __init__(self, json: dict, auth: Auth):
+        super(TriageTask, self).__init__(json, auth)
+
     def __init__(self, title: str, description: str, in_progress: bool, no_assign: bool, importance: str,
                  level_of_effort: str, due_date: datetime, auth: Auth):
         super(TriageTask, self).__init__(title, description, auth)
@@ -47,5 +52,5 @@ class TriageTask(Task):
         self.description = self.description + '\r\n\r\n' + additional_description + '\r\n\r\n'
 
     def _update_vfr(self):
-        issue_json = self._get_issue(self.id)
+        issue_json = tasks.get_issue(self.api_url, self.id, self.auth)
         tasks.score(issue_json, self.auth)

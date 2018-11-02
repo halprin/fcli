@@ -1,5 +1,7 @@
 import requests
 from requests.auth import HTTPBasicAuth
+
+from fc.jira import tasks
 from ..auth.auth import Auth
 from typing import Optional
 
@@ -65,15 +67,8 @@ class Task:
                                  auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
         response.raise_for_status()
 
-    def _get_issue(self, issue_id: str) -> dict:
-        response = requests.get(self.api_url + issue_id,
-                                auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
-        response.raise_for_status()
-
-        return response.json()
-
     def _get_active_sprint_id_of_issue(self, issue_id: str) -> Optional[int]:
-        issue = self._get_issue(issue_id)
+        issue = tasks.get_issue(self.api_url, issue_id, self.auth)
 
         sprint_list = issue['fields'][self.issue_assigned_sprint_field]
 
