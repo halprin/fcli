@@ -35,21 +35,6 @@ class TriageTask(Task):
 
         return new_task
 
-    # def __init__(self, json: dict, auth: Auth):
-    #     super(TriageTask, self).__init__(json, auth)
-
-    # def __init__(self, title: str, description: str, in_progress: bool, no_assign: bool, importance: str,
-    #              level_of_effort: str, due_date: datetime, auth: Auth):
-    #     super(TriageTask, self).__init__(title, description, auth)
-    #
-    #     self.in_progress = in_progress
-    #     self.no_assign = no_assign
-    #     self.importance = importance
-    #     self.level_of_effort = level_of_effort
-    #     self.due_date = due_date
-    #
-    #     self._modify_description_for_parameters(self.importance, self.level_of_effort, self.due_date)
-
     def create(self):
         super(TriageTask, self).create()
 

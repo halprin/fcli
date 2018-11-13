@@ -26,24 +26,6 @@ class Task:
         self.state = params.get('state')
         self.auth = auth
 
-    # def __init__(self, json: dict, auth: Auth):
-    #     self.title = json['fields']['summary']
-    #     self.description = json['fields']['description']
-    #     self.id = json['key']
-    #     self.url = self.base_url.format(self.id)
-    #     self.type = json['fields']['issuetype']['name']
-    #     self.state = json['fields']['status']['name']
-    #     self.auth = auth
-
-    # def __init__(self, title: str, description: str, auth: Auth):
-    #     self.title = title
-    #     self.description = description
-    #     self.id = None
-    #     self.url = None
-    #     self.type = None
-    #     self.state = None
-    #     self.auth = auth
-
     @classmethod
     def from_json(cls, json: dict, auth: Auth):
         tmp_dict = {

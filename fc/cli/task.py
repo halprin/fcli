@@ -215,3 +215,5 @@ def move(username: str, task_id: str, state: str):
 
         except HTTPError as exception:
             click.echo('Failure to complete transition path: {}'.format(exception))
+
+    click.echo('Successfully transitioned {} to state {}'.format(task_id, state))

@@ -5,22 +5,21 @@ from datetime import datetime
 
 class BacklogTask(Task):
 
-    # def __init__(self, params: dict, auth: Auth):
-    #     super(BacklogTask, self).__init__(json, auth)
-    #
-    #     issue_links = params.get('issue_links')
-    #
-    #     for issue_link in issue_links:
-    #         if issue_link['type']['id'] == '10603':
-    #             self.parent_story = issue_link['outwardIssue']['key']
-    #             break
+    def __init__(self, a_task: Task):
+        self.title = a_task.title
+        self.description = a_task.description
+        self.id = a_task.id
+        self.url = a_task.url
+        self.type = a_task.type
+        self.state = a_task.state
+        self.auth = a_task.auth
 
 
     @classmethod
     def from_json(cls, json: dict, auth: Auth):
-        new_task = Task.from_json(json, auth)
+        new_task = BacklogTask(Task.from_json(json, auth))
 
-        issue_links = json['fields']['issue_links']
+        issue_links = json['fields']['issuelinks']
 
         for issue_link in issue_links:
             if issue_link['type']['id'] == '10603':
@@ -31,31 +30,13 @@ class BacklogTask(Task):
 
     @classmethod
     def from_args(cls, title: str, description: str, parent_story: str, auth: Auth):
-        new_task = Task.from_args(title, description, auth)
+        new_task = BacklogTask(Task.from_args(title, description, auth))
 
         new_task.parent_story = parent_story
 
         new_task.title = new_task.parent_story + ': ' + new_task.title
 
         return new_task
-
-
-    # def __init__(self, json: dict, auth: Auth):
-    #     super(BacklogTask, self).__init__(json, auth)
-    #
-    #     issue_links = json['fields']['issue_links']
-    #
-    #     for issue_link in issue_links:
-    #         if issue_link['type']['id'] == '10603':
-    #             self.parent_story = issue_link['outwardIssue']['key']
-    #             break
-
-    # def __init__(self, title: str, description: str, parent_story: str, auth: Auth):
-    #     super(BacklogTask, self).__init__(title, description, auth)
-    #
-    #     self.parent_story = parent_story
-    #
-    #     self.title = self.parent_story + ': ' + self.title
 
     def create(self):
         super(BacklogTask, self).create()
