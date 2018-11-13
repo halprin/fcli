@@ -7,20 +7,48 @@ from . import tasks
 
 class TriageTask(Task):
 
-    def __init__(self, json: dict, auth: Auth):
-        super(TriageTask, self).__init__(json, auth)
+    def __init__(self, a_task: Task):
+        self.title = a_task.title
+        self.description = a_task.description
+        self.id = a_task.id
+        self.url = a_task.url
+        self.type = a_task.type
+        self.state = a_task.state
+        self.auth = a_task.auth
 
-    def __init__(self, title: str, description: str, in_progress: bool, no_assign: bool, importance: str,
-                 level_of_effort: str, due_date: datetime, auth: Auth):
-        super(TriageTask, self).__init__(title, description, auth)
+    @classmethod
+    def from_json(cls, json: dict, auth: Auth):
+        return TriageTask(Task.from_json(json, auth))
 
-        self.in_progress = in_progress
-        self.no_assign = no_assign
-        self.importance = importance
-        self.level_of_effort = level_of_effort
-        self.due_date = due_date
+    @classmethod
+    def from_args(cls, title: str, description: str, in_progress: bool, no_assign: bool, importance: str,
+                  level_of_effort: str, due_date: datetime, auth: Auth):
+        new_task = TriageTask(Task.from_args(title, description, auth))
 
-        self._modify_description_for_parameters(self.importance, self.level_of_effort, self.due_date)
+        new_task.in_progress = in_progress
+        new_task.no_assign = no_assign
+        new_task.importance = importance
+        new_task.level_of_effort = level_of_effort
+        new_task.due_date = due_date
+
+        new_task._modify_description_for_parameters(new_task.importance, new_task.level_of_effort, new_task.due_date)
+
+        return new_task
+
+    # def __init__(self, json: dict, auth: Auth):
+    #     super(TriageTask, self).__init__(json, auth)
+
+    # def __init__(self, title: str, description: str, in_progress: bool, no_assign: bool, importance: str,
+    #              level_of_effort: str, due_date: datetime, auth: Auth):
+    #     super(TriageTask, self).__init__(title, description, auth)
+    #
+    #     self.in_progress = in_progress
+    #     self.no_assign = no_assign
+    #     self.importance = importance
+    #     self.level_of_effort = level_of_effort
+    #     self.due_date = due_date
+    #
+    #     self._modify_description_for_parameters(self.importance, self.level_of_effort, self.due_date)
 
     def create(self):
         super(TriageTask, self).create()

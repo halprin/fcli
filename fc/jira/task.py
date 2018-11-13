@@ -4,6 +4,7 @@ from requests.auth import HTTPBasicAuth
 from fc.jira import tasks
 from ..auth.auth import Auth
 from typing import Optional
+from datetime import datetime
 
 
 class Task:
@@ -16,12 +17,54 @@ class Task:
     transition_id_for_task_ready = '221'
     issue_assigned_sprint_field = 'customfield_10005'
 
-    def __init__(self, title: str, description: str, auth: Auth):
-        self.title = title
-        self.description = description
-        self.id = None
-        self.url = None
+    def __init__(self, params: dict, auth: Auth):
+        self.title = params.get('title')
+        self.description = params.get('description')
+        self.id = params.get('id')
+        self.url = params.get('url')
+        self.type = params.get('type')
+        self.state = params.get('state')
         self.auth = auth
+
+    # def __init__(self, json: dict, auth: Auth):
+    #     self.title = json['fields']['summary']
+    #     self.description = json['fields']['description']
+    #     self.id = json['key']
+    #     self.url = self.base_url.format(self.id)
+    #     self.type = json['fields']['issuetype']['name']
+    #     self.state = json['fields']['status']['name']
+    #     self.auth = auth
+
+    # def __init__(self, title: str, description: str, auth: Auth):
+    #     self.title = title
+    #     self.description = description
+    #     self.id = None
+    #     self.url = None
+    #     self.type = None
+    #     self.state = None
+    #     self.auth = auth
+
+    @classmethod
+    def from_json(cls, json: dict, auth: Auth):
+        tmp_dict = {
+            'title': json['fields']['summary'],
+            'description': json['fields']['description'],
+            'id': json['key'],
+            'url': cls.base_url.format(json['key']),
+            'type': json['fields']['issuetype']['name'],
+            'state': json['fields']['status']['name']
+        }
+
+        return cls(tmp_dict, auth)
+
+    @classmethod
+    def from_args(cls, title: str, description: str, auth: Auth):
+        tmp_dict = {
+            'title': title,
+            'description': description
+        }
+
+        return cls(tmp_dict, auth)
 
     def create(self):
         json = {
@@ -57,6 +100,7 @@ class Task:
         raise NotImplementedError
 
     def _transition(self, id_of_transition: str):
+
         json = {
             'transition': {
                 'id': id_of_transition
@@ -81,3 +125,6 @@ class Task:
         id_end = active_sprint.find(',', id_begin)
 
         return int(active_sprint[id_begin:id_end])
+
+    def _modify_description_for_parameters(self, importance: str, level_of_importance: str, due_date: datetime):
+        raise NotImplementedError

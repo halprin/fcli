@@ -6,7 +6,8 @@ from requests import HTTPError
 from requests.auth import HTTPBasicAuth
 
 from fc.exceptions.task_exception import TaskException
-from fc.jira.triage_task import TriageTask
+# from .triage_task import TriageTask
+from . import triage_task
 from ..auth.auth import Auth
 from .task import Task
 from typing import Tuple, Optional
@@ -118,7 +119,7 @@ def _get_date_score(num_days: int) -> int:
     return 0
 
 
-def get_issue(api_url, issue_id: str, auth: Auth) -> dict:
+def get_issue(api_url: str, issue_id: str, auth: Auth) -> dict:
     response = requests.get(api_url + issue_id,
                             auth=HTTPBasicAuth(auth.username(), auth.password()))
     response.raise_for_status()
@@ -126,7 +127,7 @@ def get_issue(api_url, issue_id: str, auth: Auth) -> dict:
     return response.json()
 
 
-def get_task(api_url, issue_id: str, auth: Auth):
+def get_task(api_url: str, issue_id: str, auth: Auth) -> Task:
 
     issue_json = {}
     task = None
@@ -137,9 +138,11 @@ def get_task(api_url, issue_id: str, auth: Auth):
         raise TaskException('Invalid issue key {}'.format(issue_id)) from exception
 
     type = issue_json['fields']['issuetype']['name']
-    if type != 'Task' or type != 'Triage Task':
+    if type != 'Task' and type != 'Triage Task':
         raise TaskException('Invalid issue type {}'.format(type))
     elif type == 'Task':
-        task = BacklogTask(issue_json, auth)
+        task = BacklogTask.from_json(issue_json, auth)
     else:
-        task = TriageTask(issue_json, auth)
+        task = triage_task.TriageTask.from_json(issue_json, auth)
+
+    return task

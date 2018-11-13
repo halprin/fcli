@@ -19,7 +19,7 @@ def create(title, description, parent_story, username):
 
     auth = ComboAuth(username)
 
-    new_task = BacklogTask(title, description, parent_story, auth)
+    new_task = BacklogTask.from_args(title, description, parent_story, auth)
     try:
         task_id, url = new_task.create()
         click.echo('Backlog task {} added at {}'.format(task_id, url))
