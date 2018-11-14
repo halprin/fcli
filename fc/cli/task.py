@@ -63,8 +63,7 @@ transition_dict = {
                          'Ready': [201, 211, 221],  # Open -> RfR -> Refined -> Ready
                          'Blocked': [201, 211, 221, 11, 241],  # Open -> RfR -> Refined -> Ready -> IP -> Blocked
                          'Socialize': [201, 211, 221, 11, 261]},  # Open -> RfR -> Ref -> Ready -> IP -> Social
-             'Triage': None
-            },
+             'Triage': None},
     'Ready for Refinement': {'Backlog': {'Resolved': [211, 221, 11, 51],  # RfR -> Refined -> Ready -> IP -> Resolved
                                          'Closed': [211, 221, 11, 61],  # RfR -> Refined -> Ready -> IP -> Closed
                                          'Open': [211, 221, 11, 41],  # RfR -> Refined -> Ready -> In Progress -> Open

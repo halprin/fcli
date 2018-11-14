@@ -14,7 +14,6 @@ class BacklogTask(Task):
         self.state = a_task.state
         self.auth = a_task.auth
 
-
     @classmethod
     def from_json(cls, json: dict, auth: Auth):
         new_task = BacklogTask(Task.from_json(json, auth))
