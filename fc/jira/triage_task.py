@@ -7,23 +7,68 @@ from . import tasks
 
 class TriageTask(Task):
 
-    def __init__(self, a_task: Task):
-        self.title = a_task.title
-        self.description = a_task.description
-        self.id = a_task.id
-        self.url = a_task.url
-        self.type = a_task.type
-        self.state = a_task.state
-        self.auth = a_task.auth
+    # Triage workflow
+    # Triage -> Ready (11)
+    # Ready -> In Progress (21)
+    # In Progress -> Closed (31)
+    # In Progress -> Ready (61)
+    # In Progress -> Blocked (71)
+    # Blocked -> In Progress (81)
+    # Closed -> Triage (41)
+    # Closed -> In Progress (51)
+    transition_dict = {
+        'Open': {
+            None},
+        'Ready for Refinement': {
+            None},
+        'Needs Work': {
+            None},
+        'Refined': {
+            None},
+        'Ready': {
+            'Triage': [21, 31, 41],
+            'In Progress': [21],
+            'Closed': [21, 31],
+            'Blocked': [21, 71]},
+        'In Progress': {
+            'Triage': [31, 41],
+            'Ready': [61],
+            'Closed': [31],
+            'Blocked': [71]},
+        'Blocked': {
+            'Triage': [81, 31, 41],
+            'Ready': [81, 61],
+            'In Progress': [81],
+            'Closed': [81, 31]},
+        'Socialize': {
+            None},
+        'Closed': {
+            'Triage': [41],
+            'Ready': [51, 61],
+            'In Progress': [51],
+            'Blocked': [51, 71]},
+        'Reopened': {
+            None},
+        'Triage': {
+            'Ready': [11],
+            'In Progress': [11, 21],
+            'Closed': [11, 21, 31],
+            'Blocked': [11, 21, 71]}
+    }
 
     @classmethod
     def from_json(cls, json: dict, auth: Auth):
-        return TriageTask(Task.from_json(json, auth))
+        new_task = cls()
+        super(TriageTask, new_task).from_json(json, auth)
+        # return TriageTask(Task.from_json(json, auth))
+        return new_task
 
     @classmethod
     def from_args(cls, title: str, description: str, in_progress: bool, no_assign: bool, importance: str,
                   level_of_effort: str, due_date: datetime, auth: Auth):
-        new_task = TriageTask(Task.from_args(title, description, auth))
+        new_task = cls()
+        # new_task = TriageTask(Task.from_args(title, description, auth))
+        super(TriageTask, new_task).from_args(title, description, auth)
 
         new_task.in_progress = in_progress
         new_task.no_assign = no_assign
@@ -67,3 +112,6 @@ class TriageTask(Task):
     def _update_vfr(self):
         issue_json = tasks.get_issue(self.api_url, self.id, self.auth)
         tasks.score(issue_json, self.auth)
+
+    def _get_transition_dict(self) -> dict:
+        return self.transition_dict
