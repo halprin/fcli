@@ -143,7 +143,6 @@ class BacklogTask(Task):
     @classmethod
     def from_json(cls, json: dict, auth: Auth):
         new_task = cls()
-        # new_task = BacklogTask(Task.from_json(json, auth))
         super(BacklogTask, new_task).from_json(json, auth)
 
         issue_links = json['fields']['issuelinks']
@@ -158,7 +157,6 @@ class BacklogTask(Task):
     @classmethod
     def from_args(cls, title: str, description: str, parent_story: str, auth: Auth):
         new_task = cls()
-        # new_task = BacklogTask(Task.from_args(title, description, auth))
         super(BacklogTask, new_task).from_args(title, description, auth)
 
         new_task.parent_story = parent_story

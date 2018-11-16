@@ -17,14 +17,6 @@ class TriageTask(Task):
     # Closed -> Triage (41)
     # Closed -> In Progress (51)
     transition_dict = {
-        'Open': {
-            None},
-        'Ready for Refinement': {
-            None},
-        'Needs Work': {
-            None},
-        'Refined': {
-            None},
         'Ready': {
             'Triage': [21, 31, 41],
             'In Progress': [21],
@@ -40,15 +32,11 @@ class TriageTask(Task):
             'Ready': [81, 61],
             'In Progress': [81],
             'Closed': [81, 31]},
-        'Socialize': {
-            None},
         'Closed': {
             'Triage': [41],
             'Ready': [51, 61],
             'In Progress': [51],
             'Blocked': [51, 71]},
-        'Reopened': {
-            None},
         'Triage': {
             'Ready': [11],
             'In Progress': [11, 21],
@@ -60,14 +48,12 @@ class TriageTask(Task):
     def from_json(cls, json: dict, auth: Auth):
         new_task = cls()
         super(TriageTask, new_task).from_json(json, auth)
-        # return TriageTask(Task.from_json(json, auth))
         return new_task
 
     @classmethod
     def from_args(cls, title: str, description: str, in_progress: bool, no_assign: bool, importance: str,
                   level_of_effort: str, due_date: datetime, auth: Auth):
         new_task = cls()
-        # new_task = TriageTask(Task.from_args(title, description, auth))
         super(TriageTask, new_task).from_args(title, description, auth)
 
         new_task.in_progress = in_progress

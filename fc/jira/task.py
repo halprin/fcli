@@ -88,13 +88,15 @@ class Task:
 
         transition_dict = self._get_transition_dict()
 
-        transition_arr = transition_dict[self.state][state]
+        try:
+            transition_arr = transition_dict[self.state][state]
+        except (KeyError, TypeError) as exception:
+            raise TaskException('Invalid states for task type: {}, {} : error {}'.format(self.state, state, exception))
 
         if transition_arr is None:
             raise TaskException('Unable to find a transition path from {} to {}'.format(self.state, state))
         else:
             try:
-                print('transitions: {}'.format(transition_arr))
                 for transition_id in transition_arr:
                     self._transition(transition_id)
 
