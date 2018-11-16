@@ -114,9 +114,10 @@ class Task:
         response.raise_for_status()
 
     @classmethod
-    def get_task(cls, issue_id: str, auth: Auth):
+    def get_task(cls, issue_id: str, auth: Auth) -> 'Task':
         from .backlog_task import BacklogTask
         from .triage_task import TriageTask
+        from .el_task import ElTask
 
         issue_json = {}
         task = None
@@ -132,7 +133,11 @@ class Task:
         elif type == 'Task':
             task = BacklogTask.from_json(issue_json, auth)
         else:
-            task = TriageTask.from_json(issue_json, auth)
+            labels: list = issue_json['fields']['labels']
+            if 'EL' in labels:
+                task = ElTask.from_json(issue_json, auth)
+            else:
+                task = TriageTask.from_json(issue_json, auth)
 
         return task
 
