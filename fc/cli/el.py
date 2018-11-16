@@ -1,7 +1,5 @@
 import click
-import json
-from ..jira.triage_task import TriageTask
-from ..jira import tasks
+from ..jira.el_task import ElTask
 from requests.exceptions import HTTPError
 from ..auth.combo import ComboAuth
 import click_datetime
@@ -26,7 +24,7 @@ def create(title, description, username, in_progress, no_assign, importance, eff
 
     auth = ComboAuth(username)
 
-    # new_task = TriageTask.from_args(title, description, in_progress, no_assign, importance, effort, due, auth)
+    new_task = ElTask.from_args(title, description, in_progress, no_assign, importance, effort, due, auth)
     try:
         task_id, url = new_task.create()
         click.echo('EL task {} added at {}'.format(task_id, url))

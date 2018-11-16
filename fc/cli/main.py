@@ -1,5 +1,4 @@
 import click
-from fc import __version__
 from . import triage
 from . import backlog
 from . import version

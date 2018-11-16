@@ -1,4 +1,3 @@
-from fc.jira import tasks
 from .task import Task
 from datetime import datetime
 from ..auth.auth import Auth
