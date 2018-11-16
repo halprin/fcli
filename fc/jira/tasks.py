@@ -1,11 +1,7 @@
 import datetime
 import re
 import requests
-# from requests import HTTPError
 from requests.auth import HTTPBasicAuth
-# from fc.exceptions.task_exception import TaskException
-# from . import backlog_task
-# from . import triage_task
 from ..auth.auth import Auth
 from . import task
 from typing import Tuple, Optional
