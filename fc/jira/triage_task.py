@@ -1,3 +1,4 @@
+from fc.jira import tasks
 from .task import Task
 from datetime import datetime
 from ..auth.auth import Auth
@@ -5,17 +6,65 @@ from . import tasks
 
 
 class TriageTask(Task):
-    def __init__(self, title: str, description: str, in_progress: bool, no_assign: bool, importance: str,
-                 level_of_effort: str, due_date: datetime, auth: Auth):
-        super(TriageTask, self).__init__(title, description, auth)
 
-        self.in_progress = in_progress
-        self.no_assign = no_assign
-        self.importance = importance
-        self.level_of_effort = level_of_effort
-        self.due_date = due_date
+    # Triage workflow
+    # Triage -> Ready (11)
+    # Ready -> In Progress (21)
+    # In Progress -> Closed (31)
+    # In Progress -> Ready (61)
+    # In Progress -> Blocked (71)
+    # Blocked -> In Progress (81)
+    # Closed -> Triage (41)
+    # Closed -> In Progress (51)
+    transition_dict = {
+        'Ready': {
+            'Triage': [21, 31, 41],
+            'In Progress': [21],
+            'Closed': [21, 31],
+            'Blocked': [21, 71]},
+        'In Progress': {
+            'Triage': [31, 41],
+            'Ready': [61],
+            'Closed': [31],
+            'Blocked': [71]},
+        'Blocked': {
+            'Triage': [81, 31, 41],
+            'Ready': [81, 61],
+            'In Progress': [81],
+            'Closed': [81, 31]},
+        'Closed': {
+            'Triage': [41],
+            'Ready': [51, 61],
+            'In Progress': [51],
+            'Blocked': [51, 71]},
+        'Triage': {
+            'Ready': [11],
+            'In Progress': [11, 21],
+            'Closed': [11, 21, 31],
+            'Blocked': [11, 21, 71]}
+    }
 
-        self._modify_description_for_parameters(self.importance, self.level_of_effort, self.due_date)
+    @classmethod
+    def from_json(cls, json: dict, auth: Auth):
+        new_task = cls()
+        super(TriageTask, new_task).from_json(json, auth)
+        return new_task
+
+    @classmethod
+    def from_args(cls, title: str, description: str, in_progress: bool, no_assign: bool, importance: str,
+                  level_of_effort: str, due_date: datetime, auth: Auth):
+        new_task = cls()
+        super(TriageTask, new_task).from_args(title, description, auth)
+
+        new_task.in_progress = in_progress
+        new_task.no_assign = no_assign
+        new_task.importance = importance
+        new_task.level_of_effort = level_of_effort
+        new_task.due_date = due_date
+
+        new_task._modify_description_for_parameters(new_task.importance, new_task.level_of_effort, new_task.due_date)
+
+        return new_task
 
     def create(self):
         super(TriageTask, self).create()
@@ -47,5 +96,8 @@ class TriageTask(Task):
         self.description = self.description + '\r\n\r\n' + additional_description + '\r\n\r\n'
 
     def _update_vfr(self):
-        issue_json = self._get_issue(self.id)
+        issue_json = tasks.get_issue(self.api_url, self.id, self.auth)
         tasks.score(issue_json, self.auth)
+
+    def _get_transition_dict(self) -> dict:
+        return self.transition_dict

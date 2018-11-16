@@ -26,7 +26,7 @@ def create(title, description, username, in_progress, no_assign, importance, eff
 
     auth = ComboAuth(username)
 
-    new_task = TriageTask(title, description, in_progress, no_assign, importance, effort, due, auth)
+    new_task = TriageTask.from_args(title, description, in_progress, no_assign, importance, effort, due, auth)
     try:
         task_id, url = new_task.create()
         click.echo('Triage task {} added at {}'.format(task_id, url))
