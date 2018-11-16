@@ -1,15 +1,13 @@
 import datetime
 import re
 import requests
-from fc.jira.backlog_task import BacklogTask
-from requests import HTTPError
+# from requests import HTTPError
 from requests.auth import HTTPBasicAuth
-
-from fc.exceptions.task_exception import TaskException
-# from .triage_task import TriageTask
-from . import triage_task
+# from fc.exceptions.task_exception import TaskException
+# from . import backlog_task
+# from . import triage_task
 from ..auth.auth import Auth
-from .task import Task
+from . import task
 from typing import Tuple, Optional
 
 
@@ -106,7 +104,7 @@ def _update_triage_vfr(issue: str, score: int, auth: Auth):
 
     # custom field for VFR = customfield_18402
 
-    response = requests.put(Task.api_url + issue, json=json, auth=HTTPBasicAuth(auth.username(), auth.password()))
+    response = requests.put(task.Task.api_url + issue, json=json, auth=HTTPBasicAuth(auth.username(), auth.password()))
     response.raise_for_status()
 
 
@@ -117,32 +115,3 @@ def _get_date_score(num_days: int) -> int:
             return date_dict[key]
 
     return 0
-
-
-def get_issue(api_url: str, issue_id: str, auth: Auth) -> dict:
-    response = requests.get(api_url + issue_id,
-                            auth=HTTPBasicAuth(auth.username(), auth.password()))
-    response.raise_for_status()
-
-    return response.json()
-
-
-def get_task(api_url: str, issue_id: str, auth: Auth) -> Task:
-
-    issue_json = {}
-    task = None
-
-    try:
-        issue_json = get_issue(api_url, issue_id, auth)
-    except HTTPError as exception:
-        raise TaskException('Invalid issue key {}'.format(issue_id)) from exception
-
-    type = issue_json['fields']['issuetype']['name']
-    if type != 'Task' and type != 'Triage Task':
-        raise TaskException('Invalid issue type {}'.format(type))
-    elif type == 'Task':
-        task = BacklogTask.from_json(issue_json, auth)
-    else:
-        task = triage_task.TriageTask.from_json(issue_json, auth)
-
-    return task

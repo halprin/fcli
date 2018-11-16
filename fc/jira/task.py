@@ -1,8 +1,6 @@
 import requests
 from requests import HTTPError
 from requests.auth import HTTPBasicAuth
-
-from fc.jira import tasks
 from ..auth.auth import Auth
 from typing import Optional
 from ..exceptions.task_exception import TaskException
@@ -115,8 +113,39 @@ class Task:
                                  auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
         response.raise_for_status()
 
+    @classmethod
+    def get_task(cls, issue_id: str, auth: Auth):
+        from .backlog_task import BacklogTask
+        from .triage_task import TriageTask
+
+        issue_json = {}
+        task = None
+
+        try:
+            issue_json = cls._get_issue(issue_id, auth)
+        except HTTPError as exception:
+            raise TaskException('Invalid issue key {}'.format(issue_id)) from exception
+
+        type = issue_json['fields']['issuetype']['name']
+        if type != 'Task' and type != 'Triage Task':
+            raise TaskException('Invalid issue type {}'.format(type))
+        elif type == 'Task':
+            task = BacklogTask.from_json(issue_json, auth)
+        else:
+            task = TriageTask.from_json(issue_json, auth)
+
+        return task
+
+    @classmethod
+    def _get_issue(cls, issue_id: str, auth: Auth) -> dict:
+        response = requests.get(cls.api_url + issue_id,
+                                auth=HTTPBasicAuth(auth.username(), auth.password()))
+        response.raise_for_status()
+
+        return response.json()
+
     def _get_active_sprint_id_of_issue(self, issue_id: str) -> Optional[int]:
-        issue = tasks.get_issue(self.api_url, issue_id, self.auth)
+        issue = self._get_issue(issue_id, self.auth)
 
         sprint_list = issue['fields'][self.issue_assigned_sprint_field]
 

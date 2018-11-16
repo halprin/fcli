@@ -1,6 +1,5 @@
 from .task import Task
 from ..auth.auth import Auth
-from datetime import datetime
 
 
 class BacklogTask(Task):

@@ -1,10 +1,7 @@
 import click
-from ..jira import tasks
+from ..jira.task import Task
 from requests.exceptions import HTTPError
 from ..auth.combo import ComboAuth
-
-
-issue_url = 'https://jira.cms.gov/rest/api/2/issue/'
 
 
 @click.group()
@@ -25,8 +22,7 @@ def move(username: str, task_id: str, state: str):
 
     try:
         # use a factory method to GET the issue by key
-        the_task = tasks.get_task(issue_url, task_id, auth)
-
+        the_task = Task.get_task(task_id, auth)
     except HTTPError as exception:
         click.echo('Task search failed with {}'.format(exception))
 

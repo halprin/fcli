@@ -95,7 +95,7 @@ class TriageTask(Task):
         self.description = self.description + '\r\n\r\n' + additional_description + '\r\n\r\n'
 
     def _update_vfr(self):
-        issue_json = tasks.get_issue(self.api_url, self.id, self.auth)
+        issue_json = self._get_issue(self.id, self.auth)
         tasks.score(issue_json, self.auth)
 
     def _get_transition_dict(self) -> dict:
