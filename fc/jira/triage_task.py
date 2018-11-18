@@ -162,7 +162,8 @@ class TriageTask(task.Task):
 
         # custom field for VFR = customfield_18402
 
-        response = requests.put(self.api_url + self.id, json=json, auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
+        response = requests.put(self.api_url + self.id, json=json,
+                                auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
         response.raise_for_status()
 
     def _get_date_score(self, num_days: int) -> int:
