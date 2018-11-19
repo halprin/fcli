@@ -19,6 +19,7 @@ def update_progressbar(label, amount):
 
 def finish_progressbar(label):
     _progress_bars[label].finish()
+    click.echo('')
 
 
 def fail_execution(return_code: int, error_string: str):

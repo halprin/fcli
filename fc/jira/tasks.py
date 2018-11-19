@@ -13,9 +13,12 @@ search_url = 'https://jira.cms.gov/rest/api/2/search?jql={}'
 def triage_and_el_tasks(auth: Auth) -> List[TriageTask]:
     tasks = []
     raw_tasks = _search_for_triage_and_el(auth)
+    cli_library.create_progressbar('Retrieving Triage and EL tasks', len(raw_tasks['issues']))
     for current_task in raw_tasks['issues']:
-        cli_library.echo('Retrieving info for issue: {}'.format(current_task['key']))
+        cli_library.update_progressbar('Retrieving Triage and EL tasks', 1)
         tasks.append(task.Task.get_task(current_task['key'], auth))
+
+    cli_library.finish_progressbar('Retrieving Triage and EL tasks')
 
     return tasks
 

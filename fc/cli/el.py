@@ -3,6 +3,7 @@ from ..jira.el_task import ElTask
 from requests.exceptions import HTTPError
 from ..auth.combo import ComboAuth
 import click_datetime
+from . import cli_library
 
 
 @click.group()
@@ -31,4 +32,4 @@ def create(title, description, username, in_progress, no_assign, importance, eff
         if in_progress:
             click.echo('EL task put into In Progress')
     except HTTPError as exception:
-        click.echo('EL task creation failed with {}'.format(exception))
+        cli_library.fail_execution(1, 'EL task creation failed with {}'.format(exception))
