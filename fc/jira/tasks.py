@@ -2,6 +2,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 from ..auth.auth import Auth
 from . import task
+from ..cli import cli_library
 
 
 search_url = 'https://jira.cms.gov/rest/api/2/search?jql='
@@ -11,7 +12,7 @@ def triage_search(auth: Auth):
     triage_arr = []
     triage_issues = _search_for_triage(auth)
     for issue in triage_issues['issues']:
-        print('Retrieving info for issue: {}'.format(issue['key']))
+        cli_library.echo('Retrieving info for issue: {}'.format(issue['key']))
         triage_arr.append(task.Task.get_task(issue['key'], auth))
 
     return triage_arr
