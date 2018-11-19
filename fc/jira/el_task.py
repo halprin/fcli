@@ -2,6 +2,13 @@ from .triage_task import TriageTask
 
 
 class ElTask(TriageTask):
+    date_to_score = {
+        (0, 11): 20,
+        (12, 21): 15,
+        (22, 42): 10,
+        (43, 63): 5
+    }
+
     def type_str(self) -> str:
         return 'EL'
 
