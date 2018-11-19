@@ -59,9 +59,9 @@ def score(username):
 
     try:
         triage_tasks = tasks.triage_search(auth)
-        for task in triage_tasks['issues']:
-            click.echo('Generating score for task {}'.format(task['key']))
-            score = tasks.score(task, auth)
-            click.echo('Triage task VFR updated with {} for {}'.format(score, task['key']))
+        for task in triage_tasks:
+            click.echo('Generating score for task {}'.format(task.id))
+            task_score = task.score()
+            click.echo('Triage task VFR updated with {} for {}'.format(task_score, task.id))
     except HTTPError as exception:
         click.echo('Task search failed with {}'.format(exception))
