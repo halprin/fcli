@@ -1,7 +1,10 @@
 from .task import Task
 from datetime import datetime
 from ..auth.auth import Auth
-from . import tasks
+import re
+from typing import Tuple, Optional
+import requests
+from requests.auth import HTTPBasicAuth
 
 
 class TriageTask(Task):
@@ -43,10 +46,39 @@ class TriageTask(Task):
             'Blocked': [11, 21, 71]}
     }
 
+    importance_dict = {
+        'High': 10,
+        'high': 10,
+        'Medium': 5,
+        'medium': 5,
+        'Low': 1,
+        'low': 1
+    }
+
+    loe_dict = {
+        'High': 1,
+        'high': 1,
+        'Medium': 5,
+        'medium': 5,
+        'Low': 10,
+        'low': 10
+    }
+
+    date_dict = {
+        (0, 7): 20,
+        (8, 14): 15,
+        (15, 28): 10,
+        (29, 42): 5
+    }
+
     @classmethod
     def from_json(cls, json: dict, auth: Auth):
         new_task = cls()
         super(TriageTask, new_task).from_json(json, auth)
+        # next 3 instance variables will be populated with next set of changes, for now None
+        new_task.importance = None
+        new_task.level_of_effort = None
+        new_task.due_date = None
         return new_task
 
     @classmethod
@@ -68,7 +100,7 @@ class TriageTask(Task):
     def create(self):
         super(TriageTask, self).create()
 
-        self._update_vfr()
+        self.score()
 
         if self.in_progress:
             self._transition(self.transition_id_for_triage_ready)
@@ -78,6 +110,72 @@ class TriageTask(Task):
 
     def type_str(self) -> str:
         return 'Triage'
+
+    def score(self) -> int:
+        (imp_part, loe_part, date_part) = self._find_triage_score_parts()
+        score = self._calc_triage_score(imp_part, loe_part, date_part)
+        self._update_triage_vfr(score)
+        return score
+
+    def _find_triage_score_parts(self) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+
+        if self.importance is not None and self.level_of_effort is not None and self.due_date is not None:
+            return self.importance, self.level_of_effort, self.due_date
+        else:
+
+            regex = 'Importance: (.*)\\r\\n\\r\\nLOE: (.*)\\r\\n\\r\\nDate [N|n]eeded: (.*)\\r\\n\\r\\n'
+
+            m = re.search(regex, self.description, re.MULTILINE)
+            if m is None:
+                return None, None, None
+            else:
+                return m.groups()
+
+    def _calc_triage_score(self, imp_part: str, loe_part: str, date_part: str) -> int:
+
+        dt_score = 0
+
+        imp_score = self.importance_dict.get(imp_part, 0)
+
+        loe_score = self.loe_dict.get(loe_part, 0)
+
+        try:
+            dt_obj = datetime.strptime(date_part, '%m/%d/%Y')
+
+            today = datetime.today()
+
+            day_diff = (dt_obj - today).days
+
+            dt_score = self._get_date_score(day_diff)
+
+        except (ValueError, TypeError):
+            dt_score = 0
+
+        return imp_score + loe_score + dt_score
+
+    def _update_triage_vfr(self, score: int):
+        json = {
+            'fields': {
+                'customfield_18402': score
+            }
+        }
+
+        # custom field for VFR = customfield_18402
+
+        response = requests.put(self.api_url + self.id, json=json,
+                                auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
+        response.raise_for_status()
+
+    def _get_date_score(self, num_days: int) -> int:
+
+        if num_days < 0:
+            return 20 + (num_days * -5)
+        else:
+            for key in self.date_dict:
+                if key[0] <= num_days <= key[1]:
+                    return self.date_dict[key]
+
+        return 0
 
     def _extra_json_for_create(self, existing_json: dict):
         existing_json['fields']['issuetype'] = {
@@ -93,10 +191,6 @@ class TriageTask(Task):
         additional_description = 'Importance: {}\r\n\r\nLOE: {}\r\n\r\nDate needed: {}'\
             .format(importance, level_of_importance, due_date.strftime('%m/%d/%Y'))
         self.description = self.description + '\r\n\r\n' + additional_description + '\r\n\r\n'
-
-    def _update_vfr(self):
-        issue_json = self._get_issue(self.id, self.auth)
-        tasks.score(issue_json, self.auth)
 
     def _get_transition_dict(self) -> dict:
         return self.transition_dict
