@@ -51,7 +51,7 @@ If the username or password is not specified in some other fashion, the CLI will
 
 #### Task Creation
 
-There are two types of task the `fcli` can add: triage tasks and backlog tasks.
+There are three types of tasks the `fcli` can add: triage, EL, and backlog tasks.
 
 To add a triage task,
 ```bash
@@ -63,6 +63,14 @@ In Progress state with the `--in-progress` option, and optionally do not automat
 `--no-assign`.  The importance, effort, and due date are required, and they will be prompted for if they are not
 supplied on the command line.
 
+To add an EL task,
+```bash
+$ fcli el create "<task title>" "<task description>"  [--importance <High/Medium/Low>] [--effort <High/Medium/Low>] [--due <date in the future>] [--in-progress] [--no-assign]
+```
+
+A new task is created in the EL board with the specified title and description.  EL tasks require the same options as
+triage tasks.  
+
 To add a backlog task,
 ```bash
 $ fcli backlog create "<task title>" "<task description>" <parent story>
@@ -73,9 +81,14 @@ the parent story.  If the parent story is already in an active sprint, the task 
 
 #### Other Task Functions
 
-To move a backlog or triage task from one status to another:
+To move a task from one status to another...
 ```bash
 $ fcli task move <task key> <target status>
+```
+
+To run the triage and EL task scoring process...
+```bash
+$ fcli task score
 ```
 
 #### Triage Task Administration
@@ -88,11 +101,6 @@ $ fcli triage search
 ```
 
 A json representation of all of the open triage tasks will be printed to the terminal.
-
-To run the triage scoring process,
-```bash
-$ fcli triage score
-```
 
 The scores of all open triage tasks will be updated. The terminal will show progress.
 

@@ -1,4 +1,4 @@
-from . import task
+from .task import Task
 from datetime import datetime
 from ..auth.auth import Auth
 import re
@@ -7,7 +7,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 
-class TriageTask(task.Task):
+class TriageTask(Task):
 
     # Triage workflow
     # Triage -> Ready (11)
@@ -46,7 +46,7 @@ class TriageTask(task.Task):
             'Blocked': [11, 21, 71]}
     }
 
-    importance_dict = {
+    importance_to_score = {
         'High': 10,
         'high': 10,
         'Medium': 5,
@@ -55,7 +55,7 @@ class TriageTask(task.Task):
         'low': 1
     }
 
-    loe_dict = {
+    loe_to_score = {
         'High': 1,
         'high': 1,
         'Medium': 5,
@@ -64,7 +64,7 @@ class TriageTask(task.Task):
         'low': 10
     }
 
-    date_dict = {
+    date_to_score = {
         (0, 7): 20,
         (8, 14): 15,
         (15, 28): 10,
@@ -112,12 +112,12 @@ class TriageTask(task.Task):
         return 'Triage'
 
     def score(self) -> int:
-        (imp_part, loe_part, date_part) = self._find_triage_score_parts()
-        score = self._calc_triage_score(imp_part, loe_part, date_part)
+        (imp_part, loe_part, date_part) = self._find_score_parts()
+        score = self._calculate_score(imp_part, loe_part, date_part)
         self._update_triage_vfr(score)
         return score
 
-    def _find_triage_score_parts(self) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    def _find_score_parts(self) -> Tuple[Optional[str], Optional[str], Optional[str]]:
 
         if self.importance is not None and self.level_of_effort is not None and self.due_date is not None:
             return self.importance, self.level_of_effort, self.due_date
@@ -131,27 +131,45 @@ class TriageTask(task.Task):
             else:
                 return m.groups()
 
-    def _calc_triage_score(self, imp_part: str, loe_part: str, date_part: str) -> int:
+    def _calculate_score(self, importance: str, level_of_effort: str, due_date: str) -> int:
 
-        dt_score = 0
+        importance_score = self._importance_score(importance)
+        loe_score = self._loe_score(level_of_effort)
+        date_score = self._date_score(due_date)
 
-        imp_score = self.importance_dict.get(imp_part, 0)
+        return importance_score + loe_score + date_score
 
-        loe_score = self.loe_dict.get(loe_part, 0)
+    def _importance_score(self, importance: str) -> int:
+        return self.importance_to_score.get(importance, 0)
 
+    def _loe_score(self, level_of_effort: str) -> int:
+        return self.loe_to_score.get(level_of_effort, 0)
+
+    def _date_score(self, due_date: str) -> int:
         try:
-            dt_obj = datetime.strptime(date_part, '%m/%d/%Y')
+            dt_obj = datetime.strptime(due_date, '%m/%d/%Y')
 
             today = datetime.today()
 
             day_diff = (dt_obj - today).days
 
-            dt_score = self._get_date_score(day_diff)
+            date_score = self._date_score_from_day_delta(day_diff)
 
         except (ValueError, TypeError):
-            dt_score = 0
+            date_score = 0
 
-        return imp_score + loe_score + dt_score
+        return date_score
+
+    def _date_score_from_day_delta(self, days_delta: int) -> int:
+
+        if days_delta < 0:
+            return 20 + (days_delta * -5)
+        else:
+            for key in self.date_to_score:
+                if key[0] <= days_delta <= key[1]:
+                    return self.date_to_score[key]
+
+        return 0
 
     def _update_triage_vfr(self, score: int):
         json = {
@@ -165,17 +183,6 @@ class TriageTask(task.Task):
         response = requests.put(self.api_url + self.id, json=json,
                                 auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
         response.raise_for_status()
-
-    def _get_date_score(self, num_days: int) -> int:
-
-        if num_days < 0:
-            return 20 + (num_days * -5)
-        else:
-            for key in self.date_dict:
-                if key[0] <= num_days <= key[1]:
-                    return self.date_dict[key]
-
-        return 0
 
     def _extra_json_for_create(self, existing_json: dict):
         existing_json['fields']['issuetype'] = {

@@ -1,8 +1,8 @@
-from . import task
+from .task import Task
 from ..auth.auth import Auth
 
 
-class BacklogTask(task.Task):
+class BacklogTask(Task):
 
     # Backlog workflow
     # Open -> Resolved (21)

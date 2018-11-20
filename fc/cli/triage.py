@@ -5,6 +5,7 @@ from ..jira import tasks
 from requests.exceptions import HTTPError
 from ..auth.combo import ComboAuth
 import click_datetime
+from . import cli_library
 
 
 @click.group()
@@ -33,7 +34,7 @@ def create(title, description, username, in_progress, no_assign, importance, eff
         if in_progress:
             click.echo('Triage task put into In Progress')
     except HTTPError as exception:
-        click.echo('Triage task creation failed with {}'.format(exception))
+        cli_library.fail_execution(1, 'Triage task creation failed with {}'.format(exception))
 
 
 @triage.command()
@@ -44,24 +45,7 @@ def search(username):
     auth = ComboAuth(username)
 
     try:
-        triage_tasks = tasks.triage_search(auth)
-        click.echo('Triage tasks: {}'.format(json.dumps(triage_tasks, indent=4)))
+        triage_tasks_raw = tasks.search_for_triage(auth)
+        click.echo('Triage tasks: {}'.format(json.dumps(triage_tasks_raw, indent=4)))
     except HTTPError as exception:
-        click.echo('Task search failed with {}'.format(exception))
-
-
-@triage.command()
-@click.option('--username')
-def score(username):
-    click.echo('Scoring triage tasks')
-
-    auth = ComboAuth(username)
-
-    try:
-        triage_tasks = tasks.triage_search(auth)
-        for task in triage_tasks:
-            click.echo('Generating score for task {}'.format(task.id))
-            task_score = task.score()
-            click.echo('Triage task VFR updated with {} for {}'.format(task_score, task.id))
-    except HTTPError as exception:
-        click.echo('Task search failed with {}'.format(exception))
+        cli_library.fail_execution(1, 'Task search failed with {}'.format(exception))
