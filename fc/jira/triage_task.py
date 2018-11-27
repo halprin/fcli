@@ -74,9 +74,12 @@ class TriageTask(Task):
         new_task = cls()
         super(TriageTask, new_task).from_json(json, auth)
 
-        new_task.importance = json['fields']['customfield_19904']['value'] if json['fields']['customfield_19904'] is not None else None
-        new_task.level_of_effort = json['fields']['customfield_13405']['value'] if json['fields']['customfield_13405'] is not None else None
-        new_task.due_date = datetime.strptime(json['fields']['customfield_19905'], '%Y-%m-%d') if json['fields']['customfield_19905'] is not None else None
+        new_task.importance = json['fields']['customfield_19904']['value']\
+            if json['fields']['customfield_19904'] is not None else None
+        new_task.level_of_effort = json['fields']['customfield_13405']['value']\
+            if json['fields']['customfield_13405'] is not None else None
+        new_task.due_date = datetime.strptime(json['fields']['customfield_19905'], '%Y-%m-%d')\
+            if json['fields']['customfield_19905'] is not None else None
 
         return new_task
 
