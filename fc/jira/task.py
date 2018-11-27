@@ -44,7 +44,7 @@ class Task:
         return self
 
     def create(self):
-        json = {
+        new_json = {
             'fields': {
                 'project': {
                     'key': 'QPPFC'
@@ -57,9 +57,9 @@ class Task:
             }
         }
 
-        self._extra_json_for_create(json)
+        self._extra_json_for_create(new_json)
 
-        response = requests.post(self.api_url, json=json,
+        response = requests.post(self.api_url, json=new_json,
                                  auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
         response.raise_for_status()
 
