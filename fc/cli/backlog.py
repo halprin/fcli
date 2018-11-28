@@ -2,6 +2,7 @@ import click
 from ..jira.backlog_task import BacklogTask
 from requests.exceptions import HTTPError
 from ..auth.combo import ComboAuth
+from . import cli_library
 
 
 @click.group()
@@ -19,9 +20,9 @@ def create(title, description, parent_story, username):
 
     auth = ComboAuth(username)
 
-    new_task = BacklogTask(title, description, parent_story, auth)
+    new_task = BacklogTask.from_args(title, description, parent_story, auth)
     try:
         task_id, url = new_task.create()
         click.echo('Backlog task {} added at {}'.format(task_id, url))
     except HTTPError as exception:
-        click.echo('Backlog task creation failed with {}'.format(exception))
+        cli_library.fail_execution(1, 'Backlog task creation failed with {}'.format(exception))
