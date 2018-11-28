@@ -12,9 +12,10 @@
 # [...] are the arguments to the fcli commandFROM alpine:latest
 
 # use Alpine Linux -- the resulting image is ~88mb
-FROM alpine:latest # 88mb
+#FROM alpine:latest # 88mb
 #FROM jfloff/alpine-python:3.4-slim # 94mb
-#FROM python:3-alpine # 169mb
+FROM python:3-alpine 
+# 169mb
 
 # set the HOME environment variable
 ENV HOME /
