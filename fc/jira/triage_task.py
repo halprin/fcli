@@ -7,6 +7,10 @@ from requests.auth import HTTPBasicAuth
 
 class TriageTask(Task):
 
+    IMPORTANCE_FIELD = 'customfield_19904'
+    LEVEL_OF_EFFORT_FIELD = 'customfield_13405'
+    DATE_NEEDED_FIELD = 'customfield_19905'
+
     # Triage workflow
     # Triage -> Ready (11)
     # Ready -> In Progress (21)
@@ -74,12 +78,12 @@ class TriageTask(Task):
         new_task = cls()
         super(TriageTask, new_task).from_json(json, auth)
 
-        new_task.importance = json['fields']['customfield_19904']['value']\
-            if json['fields']['customfield_19904'] is not None else None
-        new_task.level_of_effort = json['fields']['customfield_13405']['value']\
-            if json['fields']['customfield_13405'] is not None else None
-        new_task.due_date = datetime.strptime(json['fields']['customfield_19905'], '%Y-%m-%d')\
-            if json['fields']['customfield_19905'] is not None else None
+        new_task.importance = json['fields'][cls.IMPORTANCE_FIELD]['value']\
+            if json['fields'][cls.IMPORTANCE_FIELD] is not None else None
+        new_task.level_of_effort = json['fields'][cls.LEVEL_OF_EFFORT_FIELD]['value']\
+            if json['fields'][cls.LEVEL_OF_EFFORT_FIELD] is not None else None
+        new_task.due_date = datetime.strptime(json['fields'][cls.DATE_NEEDED_FIELD], '%Y-%m-%d')\
+            if json['fields'][cls.DATE_NEEDED_FIELD] is not None else None
 
         return new_task
 
@@ -177,17 +181,17 @@ class TriageTask(Task):
         }
 
         # importance
-        existing_json['fields']['customfield_19904'] = {
+        existing_json['fields'][self.IMPORTANCE_FIELD] = {
             'value': self.importance
         }
 
         # loe
-        existing_json['fields']['customfield_13405'] = {
+        existing_json['fields'][self.LEVEL_OF_EFFORT_FIELD] = {
             'value': self.level_of_effort
         }
 
         # due date/date needed
-        existing_json['fields']['customfield_19905'] = self.due_date.strftime('%Y-%m-%d')
+        existing_json['fields'][self.DATE_NEEDED_FIELD] = self.due_date.strftime('%Y-%m-%d')
 
         if not self.no_assign:
             existing_json['fields']['assignee'] = {
