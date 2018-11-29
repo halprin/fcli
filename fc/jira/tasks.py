@@ -7,7 +7,7 @@ from typing import List
 from .triage_task import TriageTask
 
 
-search_url = 'https://jira.cms.gov/rest/api/2/search?jql={}'
+search_url = 'https://jira.cms.gov/rest/api/2/search?maxResults=100&jql={}'
 
 
 def triage_and_el_tasks(auth: Auth) -> List[TriageTask]:

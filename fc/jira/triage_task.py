@@ -1,13 +1,15 @@
 from .task import Task
 from datetime import datetime
 from ..auth.auth import Auth
-import re
-from typing import Tuple, Optional
 import requests
 from requests.auth import HTTPBasicAuth
 
 
 class TriageTask(Task):
+
+    IMPORTANCE_FIELD = 'customfield_19904'
+    LEVEL_OF_EFFORT_FIELD = 'customfield_13405'
+    DATE_NEEDED_FIELD = 'customfield_19905'
 
     # Triage workflow
     # Triage -> Ready (11)
@@ -75,10 +77,14 @@ class TriageTask(Task):
     def from_json(cls, json: dict, auth: Auth):
         new_task = cls()
         super(TriageTask, new_task).from_json(json, auth)
-        # next 3 instance variables will be populated with next set of changes, for now None
-        new_task.importance = None
-        new_task.level_of_effort = None
-        new_task.due_date = None
+
+        new_task.importance = json['fields'][cls.IMPORTANCE_FIELD]['value']\
+            if json['fields'][cls.IMPORTANCE_FIELD] is not None else None
+        new_task.level_of_effort = json['fields'][cls.LEVEL_OF_EFFORT_FIELD]['value']\
+            if json['fields'][cls.LEVEL_OF_EFFORT_FIELD] is not None else None
+        new_task.due_date = datetime.strptime(json['fields'][cls.DATE_NEEDED_FIELD], '%Y-%m-%d')\
+            if json['fields'][cls.DATE_NEEDED_FIELD] is not None else None
+
         return new_task
 
     @classmethod
@@ -92,8 +98,6 @@ class TriageTask(Task):
         new_task.importance = importance
         new_task.level_of_effort = level_of_effort
         new_task.due_date = due_date
-
-        new_task._modify_description_for_parameters(new_task.importance, new_task.level_of_effort, new_task.due_date)
 
         return new_task
 
@@ -112,50 +116,37 @@ class TriageTask(Task):
         return 'Triage'
 
     def score(self) -> int:
-        (imp_part, loe_part, date_part) = self._find_score_parts()
-        score = self._calculate_score(imp_part, loe_part, date_part)
+        score = self._calculate_score()
         self._update_triage_vfr(score)
         return score
 
-    def _find_score_parts(self) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    def _calculate_score(self) -> int:
 
-        if self.importance is not None and self.level_of_effort is not None and self.due_date is not None:
-            return self.importance, self.level_of_effort, self.due_date
-        else:
-
-            regex = 'Importance: (.*)\\r\\n\\r\\nLOE: (.*)\\r\\n\\r\\nDate [N|n]eeded: (.*)\\r\\n\\r\\n'
-
-            m = re.search(regex, self.description, re.MULTILINE)
-            if m is None:
-                return None, None, None
-            else:
-                return m.groups()
-
-    def _calculate_score(self, importance: str, level_of_effort: str, due_date: str) -> int:
-
-        importance_score = self._importance_score(importance)
-        loe_score = self._loe_score(level_of_effort)
-        date_score = self._date_score(due_date)
+        importance_score = self._importance_score()
+        loe_score = self._loe_score()
+        date_score = self._date_score()
 
         return importance_score + loe_score + date_score
 
-    def _importance_score(self, importance: str) -> int:
-        return self.importance_to_score.get(importance, 0)
+    def _importance_score(self) -> int:
+        return self.importance_to_score.get(self.importance, 0)
 
-    def _loe_score(self, level_of_effort: str) -> int:
-        return self.loe_to_score.get(level_of_effort, 0)
+    def _loe_score(self) -> int:
+        return self.loe_to_score.get(self.level_of_effort, 0)
 
-    def _date_score(self, due_date: str) -> int:
-        try:
-            dt_obj = datetime.strptime(due_date, '%m/%d/%Y')
+    def _date_score(self) -> int:
+        if self.due_date is not None:
+            try:
 
-            today = datetime.today()
+                today = datetime.today()
 
-            day_diff = (dt_obj - today).days
+                day_diff = (self.due_date - today).days
 
-            date_score = self._date_score_from_day_delta(day_diff)
+                date_score = self._date_score_from_day_delta(day_diff)
 
-        except (ValueError, TypeError):
+            except (ValueError, TypeError) as exception:
+                date_score = 0
+        else:
             date_score = 0
 
         return date_score
@@ -189,15 +180,23 @@ class TriageTask(Task):
             'name': 'Triage Task'
         }
 
+        # importance
+        existing_json['fields'][self.IMPORTANCE_FIELD] = {
+            'value': self.importance
+        }
+
+        # loe
+        existing_json['fields'][self.LEVEL_OF_EFFORT_FIELD] = {
+            'value': self.level_of_effort
+        }
+
+        # due date/date needed
+        existing_json['fields'][self.DATE_NEEDED_FIELD] = self.due_date.strftime('%Y-%m-%d')
+
         if not self.no_assign:
             existing_json['fields']['assignee'] = {
                 'name': self.auth.username()
             }
-
-    def _modify_description_for_parameters(self, importance: str, level_of_importance: str, due_date: datetime):
-        additional_description = 'Importance: {}\r\n\r\nLOE: {}\r\n\r\nDate needed: {}'\
-            .format(importance, level_of_importance, due_date.strftime('%m/%d/%Y'))
-        self.description = self.description + '\r\n\r\n' + additional_description + '\r\n\r\n'
 
     def _get_transition_dict(self) -> dict:
         return self.transition_dict
