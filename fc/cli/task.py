@@ -17,7 +17,7 @@ def task():
 @click.argument('task_id')
 @click.argument('state')
 def move(username: str, task_id: str, state: str):
-    click.echo('Transitioning task')
+    cli_library.echo('Transitioning task')
 
     auth = ComboAuth(username)
 
@@ -31,7 +31,7 @@ def move(username: str, task_id: str, state: str):
 
     if the_task is not None:
         the_task.transition(state)
-        click.echo('Successfully transitioned {} to state {}'.format(task_id, state))
+        cli_library.echo('Successfully transitioned {} to state {}'.format(task_id, state))
     else:
         cli_library.fail_execution(2, 'Failed to retrieve a task for key {}'.format(task_id))
 
@@ -39,7 +39,7 @@ def move(username: str, task_id: str, state: str):
 @task.command()
 @click.option('--username')
 def score(username):
-    click.echo('Scoring triage and EL tasks')
+    cli_library.echo('Scoring triage and EL tasks')
 
     auth = ComboAuth(username)
 
@@ -47,7 +47,7 @@ def score(username):
         triage_and_el_tasks = tasks.triage_and_el_tasks(auth)
         for current_task in triage_and_el_tasks:
             task_score = current_task.score()
-            click.echo(
+            cli_library.echo(
                 "{} task's VFR updated with {} for {}".format(current_task.type_str(), task_score, current_task.id))
     except HTTPError as exception:
         cli_library.fail_execution(1, 'Task search failed with {}'.format(exception))
