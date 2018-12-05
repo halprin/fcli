@@ -99,9 +99,6 @@ class Issue:
 
         return int(active_sprint[id_begin:id_end])
 
-    def _get_transition_dict(self) -> dict:
-        raise NotImplementedError
-
     @classmethod
     def get_issue(cls, issue_id: str, auth: Auth) -> 'Task':
         from .backlog_task import BacklogTask

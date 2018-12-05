@@ -43,3 +43,6 @@ class Task(Issue):
         response = requests.post(self.api_url + self.id + '/transitions', json=json,
                                  auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
         response.raise_for_status()
+
+    def _get_transition_dict(self) -> dict:
+        raise NotImplementedError
