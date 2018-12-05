@@ -100,7 +100,7 @@ class Issue:
         return int(active_sprint[id_begin:id_end])
 
     @classmethod
-    def get_issue(cls, issue_id: str, auth: Auth) -> 'Task':
+    def get_issue(cls, issue_id: str, auth: Auth) -> 'Issue':
         from .backlog_task import BacklogTask
         from .triage_task import TriageTask
         from .el_task import ElTask
