@@ -136,6 +136,6 @@ class Issue:
             'body': note
         }
 
-        response = requests.post(self.api_url + self.id + '/comment', json=json,
+        response = requests.post('{}{}/comment'.format(self.api_url, self.id), json=json,
                                  auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
         response.raise_for_status()
