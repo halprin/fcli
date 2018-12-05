@@ -25,7 +25,7 @@ def move(username: str, task_id: str, state: str):
 
     try:
         # use a factory method to GET the issue by key
-        the_task = Task.get_task(task_id, auth)
+        the_task = Task.get_issue(task_id, auth)
     except TaskException as exception:
         cli_library.fail_execution(1, 'Task search failed with {}'.format(exception))
 
