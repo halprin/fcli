@@ -19,7 +19,7 @@ def comment(username: str, issue_id: str, note: str):
     the_issue = None
 
     try:
-        the_issue = Task.get_issue(issue_id, auth)
+        the_issue = Issue.get_issue(issue_id, auth)
     except Exception as e:
         cli_library.fail_execution(1, 'Issue retrieval failed with {}'.format(e))
 
