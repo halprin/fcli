@@ -23,16 +23,16 @@ def triage():
 @click.option('--effort', prompt='Level of Effort', type=click.Choice(['Low', 'Medium', 'High'], case_sensitive=False))
 @click.option('--due', prompt='Due date (mm/dd/yyyy)', type=click_datetime.Datetime(format='%m/%d/%Y'))
 def create(title, description, username, in_progress, no_assign, importance, effort, due):
-    click.echo('Adding triage task {}; {}'.format(title, description))
+    cli_library.echo('Adding triage task {}; {}'.format(title, description))
 
     auth = ComboAuth(username)
 
     new_task = TriageTask.from_args(title, description, in_progress, no_assign, importance, effort, due, auth)
     try:
         task_id, url = new_task.create()
-        click.echo('Triage task {} added at {}'.format(task_id, url))
+        cli_library.echo('Triage task {} added at {}'.format(task_id, url))
         if in_progress:
-            click.echo('Triage task put into In Progress')
+            cli_library.echo('Triage task put into In Progress')
     except HTTPError as exception:
         cli_library.fail_execution(1, 'Triage task creation failed with {}'.format(exception))
 
@@ -40,12 +40,12 @@ def create(title, description, username, in_progress, no_assign, importance, eff
 @triage.command()
 @click.option('--username')
 def search(username):
-    click.echo('Searching for triage tasks')
+    cli_library.echo('Searching for triage tasks')
 
     auth = ComboAuth(username)
 
     try:
         triage_tasks_raw = tasks.search_for_triage(auth)
-        click.echo('Triage tasks: {}'.format(json.dumps(triage_tasks_raw, indent=4)))
+        cli_library.echo('Triage tasks: {}'.format(json.dumps(triage_tasks_raw, indent=4)))
     except HTTPError as exception:
         cli_library.fail_execution(1, 'Task search failed with {}'.format(exception))

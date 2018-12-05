@@ -7,7 +7,6 @@ from ..exceptions.task_exception import TaskException
 from .issue import Issue
 
 class Task(Issue):
-
     def transition(self, state: str):
 
         # use created Task (could be Backlog task or Triage task) to transition to desired state
