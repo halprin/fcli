@@ -7,6 +7,7 @@ from ..jira import tasks
 from . import cli_library
 from ..exceptions.task_exception import TaskException
 
+
 @click.command()
 @click.option('--username')
 @click.argument('issue_id')

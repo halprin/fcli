@@ -6,6 +6,7 @@ from . import version
 from . import task
 from . import comment
 
+
 @click.group()
 def cli():
     pass

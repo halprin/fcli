@@ -6,6 +6,7 @@ from typing import Optional
 from ..exceptions.task_exception import TaskException
 from .issue import Issue
 
+
 class Task(Issue):
     def transition(self, state: str):
 
