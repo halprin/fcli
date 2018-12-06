@@ -95,8 +95,8 @@ class TriageTask(Task):
 
         new_task.in_progress = in_progress
         new_task.no_assign = no_assign
-        new_task.importance = importance
-        new_task.level_of_effort = level_of_effort
+        new_task.importance = importance.title()
+        new_task.level_of_effort = level_of_effort.title()
         new_task.due_date = due_date
 
         return new_task
