@@ -130,7 +130,9 @@ class Issue:
 
     def comment(self, note: str):
 
-        json = { 'body': note }
+        json = {
+            'body': note
+        }
 
         response = requests.post('{}{}/comment'.format(self.api_url, self.id), json=json,
                                  auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
