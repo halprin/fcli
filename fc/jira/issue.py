@@ -106,7 +106,7 @@ class Issue:
         from .el_task import ElTask
 
         issue_json = {}
-        task = None
+        issue = None
 
         try:
             issue_json = cls._get_issue(issue_id, auth)
@@ -115,23 +115,22 @@ class Issue:
 
         type = issue_json['fields']['issuetype']['name']
         if type != 'Task' and type != 'Triage Task':
-            raise TaskException('Invalid issue type {}'.format(type))
+            issue = cls()
+            issue.from_json(issue_json, auth)
         elif type == 'Task':
-            task = BacklogTask.from_json(issue_json, auth)
+            issue = BacklogTask.from_json(issue_json, auth)
         else:
             labels: list = issue_json['fields']['labels']
             if 'EL' in labels:
-                task = ElTask.from_json(issue_json, auth)
+                issue = ElTask.from_json(issue_json, auth)
             else:
-                task = TriageTask.from_json(issue_json, auth)
+                issue = TriageTask.from_json(issue_json, auth)
 
-        return task
+        return issue
 
     def comment(self, note: str):
 
-        json = {
-            'body': note
-        }
+        json = { 'body': note }
 
         response = requests.post('{}{}/comment'.format(self.api_url, self.id), json=json,
                                  auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
