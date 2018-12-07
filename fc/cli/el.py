@@ -16,7 +16,7 @@ def el():
 @click.argument('description')
 @click.option('--username')
 @click.option('--in-progress', is_flag=True)
-@click.option('--no-assign', is_flag=True)
+@click.option('--no-assign', is_flag=True, default=True)
 @click.option('--importance', prompt=True, type=click.Choice(['Low', 'Medium', 'High'], case_sensitive=False))
 @click.option('--effort', prompt='Level of Effort', type=click.Choice(['Low', 'Medium', 'High'], case_sensitive=False))
 @click.option('--due', prompt='Due date (mm/dd/yyyy)', type=click_datetime.Datetime(format='%m/%d/%Y'))
