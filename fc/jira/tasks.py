@@ -16,7 +16,7 @@ def triage_and_el_tasks(auth: Auth) -> List[TriageTask]:
     cli_library.create_progressbar('Retrieving Triage and EL tasks', len(raw_tasks['issues']))
     for current_task in raw_tasks['issues']:
         cli_library.update_progressbar('Retrieving Triage and EL tasks', 1)
-        tasks.append(task.Task.get_task(current_task['key'], auth))
+        tasks.append(task.Task.get_issue(current_task['key'], auth))
 
     cli_library.finish_progressbar('Retrieving Triage and EL tasks')
 
