@@ -1,6 +1,5 @@
 import click
 from ..jira.task import Task
-from requests.exceptions import HTTPError
 from ..auth.combo import ComboAuth
 from ..jira import tasks
 from . import cli_library
@@ -43,11 +42,4 @@ def score(username):
 
     auth = ComboAuth(username)
 
-    try:
-        triage_and_el_tasks = tasks.triage_and_el_tasks(auth)
-        for current_task in triage_and_el_tasks:
-            task_score = current_task.score()
-            cli_library.echo(
-                "{} task's VFR updated with {} for {}".format(current_task.type_str(), task_score, current_task.id))
-    except HTTPError as exception:
-        cli_library.fail_execution(1, 'Task search failed with {}'.format(exception))
+    tasks.score_triage_and_el_tasks(auth)

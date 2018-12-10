@@ -1,26 +1,47 @@
 import requests
 from requests.auth import HTTPBasicAuth
+from requests.exceptions import HTTPError
 from ..auth.auth import Auth
 from . import task
 from ..cli import cli_library
-from typing import List
-from .triage_task import TriageTask
+from concurrent.futures import ThreadPoolExecutor
+import asyncio
 
 
 search_url = 'https://jira.cms.gov/rest/api/2/search?maxResults=100&jql={}'
 
 
-def triage_and_el_tasks(auth: Auth) -> List[TriageTask]:
-    tasks = []
-    raw_tasks = _search_for_triage_and_el(auth)
-    cli_library.create_progressbar('Retrieving Triage and EL tasks', len(raw_tasks['issues']))
-    for current_task in raw_tasks['issues']:
-        cli_library.update_progressbar('Retrieving Triage and EL tasks', 1)
-        tasks.append(task.Task.get_task(current_task['key'], auth))
+def score_triage_and_el_tasks(auth: Auth):
+        try:
+            raw_tasks = _search_for_triage_and_el(auth)
+        except HTTPError as exception:
+            cli_library.fail_execution(1, 'Task search failed with {}'.format(exception))
 
-    cli_library.finish_progressbar('Retrieving Triage and EL tasks')
+        awaitables = []
+        for current_task in raw_tasks['issues']:
+            scoring_task = asyncio.ensure_future(_score_triage_and_el_task(current_task['key'], auth))
+            awaitables.append(scoring_task)
 
-    return tasks
+        loop = asyncio.get_event_loop()
+        scoring_results = loop.run_until_complete(asyncio.gather(*awaitables, return_exceptions=True))
+        loop.close()
+
+        scoring_results_exception = [scoring_result for scoring_result in scoring_results if
+                                     scoring_result is not None and isinstance(scoring_result, Exception)]
+        for scoring_exception in scoring_results_exception:
+            cli_library.echo('Task scoring failed for one of the tasks with {}'.format(scoring_exception))
+        if len(scoring_results_exception) > 0:
+            cli_library.fail_execution(1, 'Task scoring failed')
+
+
+async def _score_triage_and_el_task(task_key: str, auth: Auth):
+    loop = asyncio.get_event_loop()
+    with ThreadPoolExecutor() as executor:
+        cli_library.echo('Retrieving {}'.format(task_key))
+        scorable_task = await loop.run_in_executor(executor, task.Task.get_task, task_key, auth)
+        task_score = await loop.run_in_executor(executor, scorable_task.score)
+        cli_library.echo(
+            "{} task's VFR updated with {} for {}".format(scorable_task.type_str(), task_score, scorable_task.id))
 
 
 def _search_for_triage_and_el(auth: Auth) -> dict:
