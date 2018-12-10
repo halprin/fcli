@@ -88,13 +88,13 @@ class TriageTask(Task):
         return new_task
 
     @classmethod
-    def from_args(cls, title: str, description: str, in_progress: bool, no_assign: bool, importance: str,
+    def from_args(cls, title: str, description: str, in_progress: bool, assign: bool, importance: str,
                   level_of_effort: str, due_date: datetime, auth: Auth):
         new_task = cls()
         super(TriageTask, new_task).from_args(title, description, auth)
 
         new_task.in_progress = in_progress
-        new_task.no_assign = no_assign
+        new_task.assign = assign
         new_task.importance = importance.title()
         new_task.level_of_effort = level_of_effort.title()
         new_task.due_date = due_date
@@ -193,7 +193,7 @@ class TriageTask(Task):
         # due date/date needed
         existing_json['fields'][self.DATE_NEEDED_FIELD] = self.due_date.strftime('%Y-%m-%d')
 
-        if not self.no_assign:
+        if self.assign:
             existing_json['fields']['assignee'] = {
                 'name': self.auth.username()
             }
