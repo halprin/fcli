@@ -137,4 +137,3 @@ class BacklogIssue(Task):
                  'Blocked': [171, 241],  # Reopened -> In Progress -> Blocked
                  'Closed': [161]}  # Reopened -> Closed
     }
-
