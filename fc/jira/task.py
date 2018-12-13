@@ -1,8 +1,6 @@
 import requests
 from requests import HTTPError
 from requests.auth import HTTPBasicAuth
-from ..auth.auth import Auth
-from typing import Optional
 from ..exceptions.task_exception import TaskException
 from .issue import Issue
 

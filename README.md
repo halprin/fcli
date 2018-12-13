@@ -55,17 +55,17 @@ There are three types of tasks the `fcli` can add: triage, EL, and backlog tasks
 
 To add a triage task,
 ```bash
-$ fcli triage create "<task title>" "<task description>"  [--importance <High/Medium/Low>] [--effort <High/Medium/Low>] [--due <date in the future>] [--in-progress] [--no-assign]
+$ fcli triage create "<task title>" "<task description>"  [--importance <High/Medium/Low>] [--effort <High/Medium/Low>] [--due <date in the future>] [--in-progress] [--assign]
 ```
 
 A new task is created in the triage board with the specified title and description.  Optionally, put the task into the
-In Progress state with the `--in-progress` option, and optionally do not automatically assign the task to yourself with
-`--no-assign`.  The importance, effort, and due date are required, and they will be prompted for if they are not
+In Progress state with the `--in-progress` option, and optionally assign the task to yourself with
+`--assign`.  The importance, effort, and due date are required, and they will be prompted for if they are not
 supplied on the command line.
 
 To add an EL task,
 ```bash
-$ fcli el create "<task title>" "<task description>"  [--importance <High/Medium/Low>] [--effort <High/Medium/Low>] [--due <date in the future>] [--in-progress] [--no-assign]
+$ fcli el create "<task title>" "<task description>"  [--importance <High/Medium/Low>] [--effort <High/Medium/Low>] [--due <date in the future>] [--in-progress] [--assign]
 ```
 
 A new task is created in the EL board with the specified title and description.  EL tasks require the same options as
@@ -89,6 +89,13 @@ $ fcli task move <task key> <target status>
 To run the triage and EL task scoring process...
 ```bash
 $ fcli task score
+```
+
+#### Other Backlog Functions
+
+To add a calculated VFR value to a story in the backlog and move it to Refined status...
+```bash
+$ fcli backlog vfr <task key> <duration> <cost of delay>
 ```
 
 #### Triage Task Administration

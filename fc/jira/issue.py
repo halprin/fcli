@@ -76,6 +76,9 @@ class Issue:
     def type_str(self) -> str:
         raise NotImplementedError
 
+    def update_vfr(self, duration: int, cost_of_delay: int) -> float:
+        raise NotImplementedError
+
     @classmethod
     def _get_issue(cls, issue_id: str, auth: Auth) -> dict:
         response = requests.get(cls.api_url + issue_id,
@@ -101,6 +104,7 @@ class Issue:
 
     @classmethod
     def get_issue(cls, issue_id: str, auth: Auth) -> 'Issue':
+        from .backlog_story import BacklogStory
         from .backlog_task import BacklogTask
         from .triage_task import TriageTask
         from .el_task import ElTask
@@ -114,9 +118,11 @@ class Issue:
             raise TaskException('Invalid issue key {}'.format(issue_id)) from exception
 
         type = issue_json['fields']['issuetype']['name']
-        if type != 'Task' and type != 'Triage Task':
+        if type != 'Task' and type != 'Story' and type != 'Triage Task':
             issue = cls()
             issue.from_json(issue_json, auth)
+        elif type == 'Story':
+            issue = BacklogStory.from_json(issue_json, auth)
         elif type == 'Task':
             issue = BacklogTask.from_json(issue_json, auth)
         else:
