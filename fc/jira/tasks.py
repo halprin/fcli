@@ -38,7 +38,7 @@ async def _score_triage_and_el_task(task_key: str, auth: Auth):
     loop = asyncio.get_event_loop()
     with ThreadPoolExecutor() as executor:
         cli_library.echo('Retrieving {}'.format(task_key))
-        scorable_task = await loop.run_in_executor(executor, task.Task.get_task, task_key, auth)
+        scorable_task = await loop.run_in_executor(executor, task.Task.get_issue, task_key, auth)
         task_score = await loop.run_in_executor(executor, scorable_task.score)
         cli_library.echo(
             "{} task's VFR updated with {} for {}".format(scorable_task.type_str(), task_score, scorable_task.id))
