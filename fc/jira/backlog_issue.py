@@ -1,7 +1,7 @@
-from .task import Task
+from .fcissue import FcIssue
 
 
-class BacklogIssue(Task):
+class BacklogIssue(FcIssue):
 
     # Backlog workflow
     # Open -> Resolved (21)
@@ -137,3 +137,6 @@ class BacklogIssue(Task):
                  'Blocked': [171, 241],  # Reopened -> In Progress -> Blocked
                  'Closed': [161]}  # Reopened -> Closed
     }
+
+    def _get_transition_dict(self) -> dict:
+        return self.transition_dict

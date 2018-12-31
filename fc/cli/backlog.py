@@ -34,8 +34,8 @@ def create(title: str, description: str, parent_story: str, username: str):
 @click.argument('duration', type=int)
 @click.argument('cost_of_delay', type=int)
 @click.option('--username')
-def vfr(issue_id: str, duration: int, cost_of_delay: int, username: str):
-    click.echo('Adding VFR to issue')
+def score(issue_id: str, duration: int, cost_of_delay: int, username: str):
+    cli_library.echo('Adding VFR to issue')
 
     auth = ComboAuth(username)
 
@@ -47,7 +47,13 @@ def vfr(issue_id: str, duration: int, cost_of_delay: int, username: str):
         cli_library.fail_execution(1, 'Issue retrieval failed with {}'.format(e))
 
     if the_issue is not None:
-        vfr_value = the_issue.update_vfr(duration, cost_of_delay)
-        click.echo("Successfully updated {} with a VFR of {}".format(issue_id, vfr_value))
+        if the_issue.project == 'QPPFC' and the_issue.type_str() == 'Story':
+            the_issue.set_duration(duration)
+            the_issue.set_cost_of_delay(cost_of_delay)
+            vfr_value = the_issue.score()
+            click.echo('Successfully updated {} with a VFR of {}'.format(issue_id, vfr_value))
+        else:
+            err_string = 'Failed to update VFR, issue {} is not a backlog story [{}] or is not the correct project [{}]'
+            cli_library.fail_execution(3, err_string.format(issue_id, the_issue.type_str(), the_issue.project))
     else:
         cli_library.fail_execution(2, 'Failed to retrieve an issue for key {}'.format(issue_id))

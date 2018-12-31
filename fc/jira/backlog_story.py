@@ -7,6 +7,10 @@ from ..exceptions.task_exception import TaskException
 
 class BacklogStory(BacklogIssue):
 
+    def __init__(self):
+        self.duration = None
+        self.cost_of_delay = None
+
     @classmethod
     def from_json(cls, json: dict, auth: Auth):
         new_story = cls()
@@ -15,39 +19,37 @@ class BacklogStory(BacklogIssue):
         return new_story
 
     @classmethod
-    def from_args(cls, title: str, description: str, parent_story: str, auth: Auth):
+    def from_args(cls, title: str, description: str, auth: Auth):
         new_story = cls()
         super(BacklogStory, new_story).from_args(title, description, auth)
 
         return new_story
 
-    def create(self):
-        super(BacklogStory, self).create()
-
-        return self.id, self.url
-
     def type_str(self) -> str:
         return 'Story'
+
+    def set_duration(self, dur: str):
+        self.duration = dur
+
+    def set_cost_of_delay(self, cod: str):
+        self.cost_of_delay = cod
 
     def _extra_json_for_create(self, existing_json: dict):
         pass
 
-    def _get_transition_dict(self) -> dict:
-        return self.transition_dict
-
-    def update_vfr(self, duration: int, cost_of_delay: int) -> float:
+    def score(self) -> float:
 
         if self.type != 'Story':
             raise TaskException('Invalid type: Can only add VFR to Story types')
 
-        vfr_value = round(cost_of_delay / duration, 2)
+        vfr_value = round(self.cost_of_delay / self.duration, 2)
 
         # store vfr, duration, cost of delay
         json = {
             'fields': {
                 'customfield_18402': vfr_value,
-                'customfield_18400': duration,
-                'customfield_18401': cost_of_delay
+                'customfield_18400': self.duration,
+                'customfield_18401': self.cost_of_delay
             }
         }
 

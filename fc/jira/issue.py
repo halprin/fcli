@@ -24,6 +24,7 @@ class Issue:
         self.type = None
         self.state = None
         self.auth = None
+        self.project = None
 
     def from_json(self, json: dict, auth: Auth):
         self.title = json['fields']['summary']
@@ -33,6 +34,7 @@ class Issue:
         self.type = json['fields']['issuetype']['name']
         self.state = json['fields']['status']['name']
         self.auth = auth
+        self.project = json['fields']['project']['key']
 
         return self
 
@@ -74,10 +76,7 @@ class Issue:
         raise NotImplementedError
 
     def type_str(self) -> str:
-        raise NotImplementedError
-
-    def update_vfr(self, duration: int, cost_of_delay: int) -> float:
-        raise NotImplementedError
+        return 'Generic Issue'
 
     @classmethod
     def _get_issue(cls, issue_id: str, auth: Auth) -> dict:
@@ -117,20 +116,21 @@ class Issue:
         except HTTPError as exception:
             raise TaskException('Invalid issue key {}'.format(issue_id)) from exception
 
-        type = issue_json['fields']['issuetype']['name']
-        if type != 'Task' and type != 'Story' and type != 'Triage Task':
-            issue = cls()
-            issue.from_json(issue_json, auth)
-        elif type == 'Story':
+        issue_type = issue_json['fields']['issuetype']['name']
+
+        if issue_type == 'Story':
             issue = BacklogStory.from_json(issue_json, auth)
-        elif type == 'Task':
+        elif issue_type == 'Task':
             issue = BacklogTask.from_json(issue_json, auth)
-        else:
+        elif issue_type == 'Triage Task':
             labels: list = issue_json['fields']['labels']
             if 'EL' in labels:
                 issue = ElTask.from_json(issue_json, auth)
             else:
                 issue = TriageTask.from_json(issue_json, auth)
+        else:
+            issue = cls()
+            issue.from_json(issue_json, auth)
 
         return issue
 

@@ -1,11 +1,11 @@
-from .task import Task
+from .fcissue import FcIssue
 from datetime import datetime
 from ..auth.auth import Auth
 import requests
 from requests.auth import HTTPBasicAuth
 
 
-class TriageTask(Task):
+class TriageTask(FcIssue):
 
     IMPORTANCE_FIELD = 'customfield_19904'
     LEVEL_OF_EFFORT_FIELD = 'customfield_13405'

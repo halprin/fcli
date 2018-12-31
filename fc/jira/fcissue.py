@@ -5,7 +5,7 @@ from ..exceptions.task_exception import TaskException
 from .issue import Issue
 
 
-class Task(Issue):
+class FcIssue(Issue):
     def transition(self, state: str):
 
         # use created Task (could be Backlog task or Triage task) to transition to desired state
@@ -45,3 +45,12 @@ class Task(Issue):
 
     def _get_transition_dict(self) -> dict:
         raise NotImplementedError
+
+    def update_vfr(self, duration: int, cost_of_delay: int) -> float:
+        raise NotImplementedError
+
+    def score(self) -> int:
+        raise NotImplementedError
+
+    def type_str(self) -> str:
+        return 'FcIssue'
