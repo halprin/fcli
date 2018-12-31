@@ -95,7 +95,7 @@ $ fcli task score
 
 To add a calculated VFR value to a story in the backlog and move it to Refined status...
 ```bash
-$ fcli backlog vfr <task key> <duration> <cost of delay>
+$ fcli backlog score <task key> <duration> <cost of delay>
 ```
 
 #### Triage Task Administration
