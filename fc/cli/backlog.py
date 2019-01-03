@@ -51,7 +51,7 @@ def score(issue_id: str, duration: int, cost_of_delay: int, username: str):
             the_issue.set_duration(duration)
             the_issue.set_cost_of_delay(cost_of_delay)
             vfr_value = the_issue.score()
-            click.echo('Successfully updated {} with a VFR of {}'.format(issue_id, vfr_value))
+            cli_library.echo('Successfully updated {} with a VFR of {}'.format(issue_id, vfr_value))
         else:
             err_string = 'Failed to update VFR, issue {} is not a backlog story [{}] or is not the correct project [{}]'
             cli_library.fail_execution(3, err_string.format(issue_id, the_issue.type_str(), the_issue.project))

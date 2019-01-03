@@ -46,9 +46,6 @@ class FcIssue(Issue):
     def _get_transition_dict(self) -> dict:
         raise NotImplementedError
 
-    def update_vfr(self, duration: int, cost_of_delay: int) -> float:
-        raise NotImplementedError
-
     def score(self) -> int:
         raise NotImplementedError
 
