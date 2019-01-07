@@ -1,11 +1,7 @@
 import click
 from ..jira.issue import Issue
-from ..jira.task import Task
-from requests.exceptions import HTTPError
 from ..auth.combo import ComboAuth
-from ..jira import tasks
 from . import cli_library
-from ..exceptions.task_exception import TaskException
 
 
 @click.command()

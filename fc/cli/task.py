@@ -1,5 +1,5 @@
 import click
-from ..jira.task import Task
+from ..jira.fcissue import FcIssue
 from ..auth.combo import ComboAuth
 from ..jira import tasks
 from . import cli_library
@@ -24,7 +24,7 @@ def move(username: str, task_id: str, state: str):
 
     try:
         # use a factory method to GET the issue by key
-        the_task = Task.get_issue(task_id, auth)
+        the_task = FcIssue.get_issue(task_id, auth)
     except TaskException as exception:
         cli_library.fail_execution(1, 'Task search failed with {}'.format(exception))
 
