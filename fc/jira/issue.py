@@ -116,9 +116,12 @@ class Issue:
         except HTTPError as exception:
             raise TaskException('Invalid issue key {}'.format(issue_id)) from exception
 
+        project = issue_json['fields']['project']['key']
         issue_type = issue_json['fields']['issuetype']['name']
-
-        if issue_type == 'Story':
+        if project != 'QPPFC':
+            issue = cls()
+            issue.from_json(issue_json, auth)
+        elif issue_type == 'Story':
             issue = BacklogStory.from_json(issue_json, auth)
         elif issue_type == 'Task':
             issue = BacklogTask.from_json(issue_json, auth)
