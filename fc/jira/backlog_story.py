@@ -11,20 +11,6 @@ class BacklogStory(BacklogIssue):
         self.duration = None
         self.cost_of_delay = None
 
-    @classmethod
-    def from_json(cls, json: dict, auth: Auth):
-        new_story = cls()
-        super(BacklogStory, new_story).from_json(json, auth)
-
-        return new_story
-
-    @classmethod
-    def from_args(cls, title: str, description: str, auth: Auth):
-        new_story = cls()
-        super(BacklogStory, new_story).from_args(title, description, auth)
-
-        return new_story
-
     def type_str(self) -> str:
         return 'Story'
 
