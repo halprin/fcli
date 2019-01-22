@@ -75,8 +75,7 @@ class TriageTask(FcIssue):
 
     @classmethod
     def from_json(cls, json: dict, auth: Auth):
-        new_task = cls()
-        super(TriageTask, new_task).from_json(json, auth)
+        new_task = super(TriageTask, cls).from_json(json, auth)
 
         new_task.importance = json['fields'][cls.IMPORTANCE_FIELD]['value']\
             if json['fields'][cls.IMPORTANCE_FIELD] is not None else None
@@ -90,8 +89,7 @@ class TriageTask(FcIssue):
     @classmethod
     def from_args(cls, title: str, description: str, in_progress: bool, assign: bool, importance: str,
                   level_of_effort: str, due_date: datetime, auth: Auth):
-        new_task = cls()
-        super(TriageTask, new_task).from_args(title, description, auth)
+        new_task = super(TriageTask, cls).from_args(title, description, auth)
 
         new_task.in_progress = in_progress
         new_task.assign = assign

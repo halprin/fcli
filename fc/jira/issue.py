@@ -26,24 +26,28 @@ class Issue:
         self.auth = None
         self.project = None
 
-    def from_json(self, json: dict, auth: Auth):
-        self.title = json['fields']['summary']
-        self.description = json['fields']['description']
-        self.id = json['key']
-        self.url = self.base_url.format(json['key'])
-        self.type = json['fields']['issuetype']['name']
-        self.state = json['fields']['status']['name']
-        self.auth = auth
-        self.project = json['fields']['project']['key']
+    @classmethod
+    def from_json(cls, json: dict, auth: Auth):
+        new_issue = cls()
+        new_issue.title = json['fields']['summary']
+        new_issue.description = json['fields']['description']
+        new_issue.id = json['key']
+        new_issue.url = new_issue.base_url.format(json['key'])
+        new_issue.type = json['fields']['issuetype']['name']
+        new_issue.state = json['fields']['status']['name']
+        new_issue.auth = auth
+        new_issue.project = json['fields']['project']['key']
 
-        return self
+        return new_issue
 
-    def from_args(self, title: str, description: str, auth: Auth):
-        self.title = title
-        self.description = description
-        self.auth = auth
+    @classmethod
+    def from_args(cls, title: str, description: str, auth: Auth):
+        new_issue = cls()
+        new_issue.title = title
+        new_issue.description = description
+        new_issue.auth = auth
 
-        return self
+        return new_issue
 
     def create(self):
         json = {
@@ -116,9 +120,11 @@ class Issue:
         except HTTPError as exception:
             raise TaskException('Invalid issue key {}'.format(issue_id)) from exception
 
+        project = issue_json['fields']['project']['key']
         issue_type = issue_json['fields']['issuetype']['name']
-
-        if issue_type == 'Story':
+        if project != 'QPPFC':
+            issue = cls.from_json(issue_json, auth)
+        elif issue_type == 'Story':
             issue = BacklogStory.from_json(issue_json, auth)
         elif issue_type == 'Task':
             issue = BacklogTask.from_json(issue_json, auth)
@@ -129,8 +135,7 @@ class Issue:
             else:
                 issue = TriageTask.from_json(issue_json, auth)
         else:
-            issue = cls()
-            issue.from_json(issue_json, auth)
+            issue = cls.from_json(issue_json, auth)
 
         return issue
 
