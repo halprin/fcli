@@ -50,7 +50,7 @@ class Issue:
         return new_issue
 
     def create(self):
-        json = {
+        jso = {
             'fields': {
                 'project': {
                     'key': 'QPPFC'
@@ -63,9 +63,9 @@ class Issue:
             }
         }
 
-        self._extra_json_for_create(json)
+        self._extra_json_for_create(jso)
 
-        response = requests.post(self.api_url, json=json,
+        response = requests.post(self.api_url, json=jso,
                                  auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
         response.raise_for_status()
 

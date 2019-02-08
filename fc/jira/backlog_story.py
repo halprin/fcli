@@ -10,6 +10,30 @@ class BacklogStory(BacklogIssue):
     def __init__(self):
         self.duration = None
         self.cost_of_delay = None
+        self.ac = None
+
+    @classmethod
+    def from_json(cls, json: dict, auth: Auth):
+        new_task = super(BacklogStory, cls).from_json(json, auth)
+
+        new_task.ac = json['fields']['customfield_14219']
+
+        issue_links = json['fields']['issuelinks']
+
+        for issue_link in issue_links:
+            if issue_link['type']['id'] == '10603':
+                new_task.parent_story = issue_link['outwardIssue']['key']
+                break
+
+        return new_task
+
+    @classmethod
+    def from_args(cls, title: str, description: str, ac: str, auth: Auth):
+        new_task = super(BacklogStory, cls).from_args(title, description, auth)
+
+        new_task.ac = ac
+
+        return new_task
 
     def type_str(self) -> str:
         return 'Story'
@@ -21,7 +45,13 @@ class BacklogStory(BacklogIssue):
         self.cost_of_delay = cod
 
     def _extra_json_for_create(self, existing_json: dict):
-        pass
+
+        existing_json['fields']['issuetype'] = {
+            'name': 'Story'
+        }
+
+        # fill in for the ac field
+        existing_json['fields']['customfield_14219'] = self.ac
 
     def score(self) -> float:
 

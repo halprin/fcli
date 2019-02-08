@@ -14,6 +14,7 @@ def cli():
 
 cli.add_command(triage.triage)
 cli.add_command(backlog.backlog)
+backlog.backlog.add_command(backlog.create)
 cli.add_command(el.el)
 cli.add_command(version.version)
 cli.add_command(task.task)
