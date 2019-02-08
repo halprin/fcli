@@ -61,3 +61,13 @@ def search_for_triage(auth: Auth) -> dict:
     response.raise_for_status()
 
     return response.json()
+
+
+def search_for_stories(auth: Auth) -> dict:
+    search_ext = 'project=qppfc+and+issueType="Story"+and+status+not+in+(resolved,closed)&fields=key,description,' +\
+                 'customfield_18402,customfield_18400,customfield_18401'
+
+    response = requests.get(search_url.format(search_ext), auth=HTTPBasicAuth(auth.username(), auth.password()))
+    response.raise_for_status()
+
+    return response.json()
