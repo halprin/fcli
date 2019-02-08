@@ -13,7 +13,7 @@ def backlog():
     pass
 
 
-@click.group()
+@backlog.group()
 def create():
     pass
 
@@ -47,10 +47,10 @@ def story(title: str, description: str, ac: str, username: str):
 
     auth = ComboAuth(username)
 
-    new_task = BacklogStory.from_args(title, description, ac, auth)
+    new_story = BacklogStory.from_args(title, description, ac, auth)
 
     try:
-        task_id, url = new_task.create()
+        task_id, url = new_story.create()
         cli_library.echo('Backlog story {} added at {}'.format(task_id, url))
     except HTTPError as exception:
         cli_library.fail_execution(1, 'Backlog story creation failed with {}'.format(exception))
