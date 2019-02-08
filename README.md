@@ -47,6 +47,17 @@ If the username or password is not specified in some other fashion, the CLI will
 
 ## Usage
 
+### Story Administration
+
+#### Story Creation
+
+To create a story in the backlog use
+```bash
+$ fcli backlog create story '<story title>'
+```
+
+You will be prompted to enter a Description and Acceptance Criteria.
+
 ### Task Administration
 
 #### Task Creation
@@ -73,7 +84,7 @@ triage tasks.
 
 To add a backlog task,
 ```bash
-$ fcli backlog create "<task title>" "<task description>" <parent story>
+$ fcli backlog create task "<task title>" "<task description>" <parent story>
 ```
 
 A new task is created in the standard backlog with the specified title and description.  The task is linked with

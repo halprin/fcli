@@ -1,4 +1,6 @@
 import click
+
+from fc.jira.backlog_story import BacklogStory
 from ..jira.issue import Issue
 from ..jira.backlog_task import BacklogTask
 from requests.exceptions import HTTPError
@@ -11,22 +13,47 @@ def backlog():
     pass
 
 
-@backlog.command()
+@backlog.group()
+def create():
+    pass
+
+
+@create.command()
 @click.argument('title')
 @click.argument('description')
 @click.argument('parent_story')
 @click.option('--username')
-def create(title: str, description: str, parent_story: str, username: str):
+def task(title: str, description: str, parent_story: str, username: str):
     cli_library.echo('Adding backlog task {}; {}'.format(title, description))
 
     auth = ComboAuth(username)
 
     new_task = BacklogTask.from_args(title, description, parent_story, auth)
+
     try:
         task_id, url = new_task.create()
         cli_library.echo('Backlog task {} added at {}'.format(task_id, url))
     except HTTPError as exception:
         cli_library.fail_execution(1, 'Backlog task creation failed with {}'.format(exception))
+
+
+@create.command()
+@click.argument('title')
+@click.option('--description', prompt='Description')
+@click.option('--ac', prompt='Acceptance Criteria')
+@click.option('--username')
+def story(title: str, description: str, ac: str, username: str):
+    cli_library.echo('Adding backlog story {}'.format(title))
+
+    auth = ComboAuth(username)
+
+    new_story = BacklogStory.from_args(title, description, ac, auth)
+
+    try:
+        task_id, url = new_story.create()
+        cli_library.echo('Backlog story {} added at {}'.format(task_id, url))
+    except HTTPError as exception:
+        cli_library.fail_execution(1, 'Backlog story creation failed with {}'.format(exception))
 
 
 @backlog.command()
