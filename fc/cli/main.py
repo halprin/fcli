@@ -6,6 +6,7 @@ from . import version
 from . import task
 from . import comment
 from . import vfrcheck
+from . import reports
 
 
 @click.group()
@@ -19,4 +20,5 @@ cli.add_command(el.el)
 cli.add_command(version.version)
 cli.add_command(task.task)
 cli.add_command(comment.comment)
-cli.add_command(vfrcheck.vfrcheck)
+cli.add_command(vfrcheck.vfrsanity)
+cli.add_command(reports.reports)

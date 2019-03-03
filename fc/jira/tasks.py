@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 import asyncio
 
 
-search_url = 'https://jira.cms.gov/rest/api/2/search?maxResults=100&jql={}'
+search_url = 'https://jira.cms.gov/rest/api/2/search?maxResults=200&jql={}'
 
 
 def score_triage_and_el_tasks(auth: Auth):
@@ -63,9 +63,41 @@ def search_for_triage(auth: Auth) -> dict:
     return response.json()
 
 
-def search_for_stories(auth: Auth) -> dict:
-    search_ext = 'project=qppfc+and+issueType="Story"+and+status+not+in+(resolved,closed)&fields=key,description,' +\
-                 'customfield_18402,customfield_18400,customfield_18401'
+def search_for_stories_ord_duration(auth: Auth) -> dict:
+    search_ext = 'project=qppfc+and+type="Story"+and+status+in+(refined,blocked,ready,"in+progress")+order+by+' +\
+                 'duration+desc,+key+asc&fields=key,summary,customfield_18402,customfield_18400,customfield_18401'
+
+    response = requests.get(search_url.format(search_ext), auth=HTTPBasicAuth(auth.username(), auth.password()))
+    response.raise_for_status()
+
+    return response.json()
+
+
+def search_for_stories_ord_cod(auth: Auth) -> dict:
+    search_ext = 'project=qppfc+and+type="Story"+and+status+in+(refined,blocked,ready,"in+progress")+order+by+' +\
+                 '"cost of delay"+desc,+key+asc&fields=key,summary,customfield_18402,customfield_18400,' +\
+                 'customfield_18401'
+
+    response = requests.get(search_url.format(search_ext), auth=HTTPBasicAuth(auth.username(), auth.password()))
+    response.raise_for_status()
+
+    return response.json()
+
+
+def get_developer_users(auth: Auth) -> dict:
+    response = requests.get('https://jira.cms.gov/rest/api/2/project/20101/role/10001',
+                            auth=HTTPBasicAuth(auth.username(), auth.password()))
+    response.raise_for_status()
+
+    return response.json()
+
+
+def get_user_issues(user: str, auth: Auth) -> dict:
+    search_ext = 'project=qppfc+and+assignee={}+and+status+in+(refined,blocked,ready,"in+progress")+'.format(user) +\
+                 'order+by+duration+asc&fields=key,summary,issuetype,status,customfield_18402,customfield_18400,' +\
+                 'customfield_18401,customfield_19905,customfield_19904,customfield_13405,labels'
+
+    # cli_library.echo('search url: {}'.format(search_url.format(search_ext)))
 
     response = requests.get(search_url.format(search_ext), auth=HTTPBasicAuth(auth.username(), auth.password()))
     response.raise_for_status()
