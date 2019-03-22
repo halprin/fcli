@@ -33,17 +33,24 @@ Again, `sudo` may be required.
 credentials.
 
 ### File
-Create an ini file at `~/.fcli`.  In there, add the `[default]` section, and under that section specify a `username` and
+Create an ini file at `~/.fcli/.fcli-creds`.  In there, add the `[default]` section, and under that section specify a `username` and
 `password`.  An example can be seen in [fcli.ini](./fcli.ini).
+Additionally, if you need the reporting functionality, add a `[gapps]` section and under that section specify `service-acct-creds` and
+`sheet-create-url`.  `service-acct-creds` is a full path to a credentials file to use with Google Apps and `sheet-create-url` is a URL
+used to create a document in Google Drive.
 
 ### Environment Variables
-The environment variables `FCLI_USER` and `FCLI_PASS` can be utilized to specify the username and password.
+The environment variables `FCLI_USER` and `FCLI_PASS` can be utilized to specify the username and password.  The environment
+variables `FCLI_G_SERV_ACCT_CREDS` and `FCLI_G_SHEET_CREATE_URL` can be utilized to specify the Google credential file path
+and document creation URL.
 
 ### CLI
 Only the `username` can be specified via the CLI.  Tack on the `--username <username>` option.
 
 ### Keyboard
-If the username or password is not specified in some other fashion, the CLI will prompt the user.
+If the username or password is not specified in some other fashion, the CLI will prompt the user.  Similarly, the Google
+credential file path and Google document creation URL will be prompted.
+
 
 ## Usage
 
@@ -121,6 +128,31 @@ $ fcli triage search
 A json representation of all of the open triage tasks will be printed to the terminal.
 
 The scores of all open triage tasks will be updated. The terminal will show progress.
+
+### Reports
+
+The reporting functionality is currently not very generalized and the backing JQL queries are fairly specific to the FC
+team.
+
+#### VFR Sanity Check
+
+The VFR Sanity Check report can be generated using
+```bash
+$ fcli vfrsanity check
+```
+
+This report will create a Google sheet with two tabs.  The first will order and group all stories by Duration value and
+the second will order and group all stories by Cost of Delay value.
+
+#### User Tasks
+
+The User Tasks report can be generated using
+```bash
+$ fcli reports usertasks
+```
+
+This report will generate a Google sheet with one tab of names of everyone on the project and then one tab each for the
+tasks for each person.
 
 ## Development
 I accept PRs!  Check out the [issues](https://github.com/halprin/fcli/issues) and assign yourself when you start
