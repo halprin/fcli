@@ -20,6 +20,13 @@ def check(username: str):
 
     auth = ComboAuth(username)
 
+    SERVICE_ACCOUNT_FILE = auth.google_service_acct_creds()
+    SHEET_CREATE_URL = auth.sheet_create_url()
+
+    if SERVICE_ACCOUNT_FILE is None or SHEET_CREATE_URL is None:
+        cli_library.echo('Google service account credential file path and sheet create url must be defined '
+                         'in order to generate a report file.')
+
     cli_library.echo('retrieving all stories')
 
     # get stories ordered by duration
@@ -29,20 +36,15 @@ def check(username: str):
 
     # setup and build credentials for google api calls
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive.file']
-    SERVICE_ACCOUNT_FILE = '/Users/sfradkin/.fcli/quickstart-1549666983080-fdb14a0d013a.json'
 
     credentials = service_account.Credentials.from_service_account_file(
         SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 
     service = build('sheets', 'v4', credentials=credentials)
 
-    base_create_sheet_url = 'https://script.google.com/macros/s/AKfycbw_mh_P6b50yHADcYku4LCmkLhoxjtWIsY2NlxoDHTG' \
-                            'fiz4s4-l/exec?shareWith=fcli-user@quickstart-1549666983080.iam.gserviceaccount.com&' \
-                            'title='
+    report_title = 'VFR Sanity Check ' + date.today().strftime('%m-%d-%y')
 
-    report_title = 'VFR Sanity Check ' + date.today().strftime('%d-%m-%y')
-
-    response = requests.get(base_create_sheet_url + report_title)
+    response = requests.get(SHEET_CREATE_URL + report_title)
 
     response.raise_for_status()
 

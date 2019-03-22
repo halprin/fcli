@@ -23,20 +23,21 @@ def usertasks(username: str):
 
     # setup and build credentials for google api calls
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive.file']
-    SERVICE_ACCOUNT_FILE = '/Users/sfradkin/.fcli/quickstart-1549666983080-fdb14a0d013a.json'
+    SERVICE_ACCOUNT_FILE = auth.google_service_acct_creds()
+    SHEET_CREATE_URL = auth.sheet_create_url()
+
+    if SERVICE_ACCOUNT_FILE is None or SHEET_CREATE_URL is None:
+        cli_library.echo('Google service account credential file path and sheet create url must be defined '
+                         'in order to generate a report file.')
 
     credentials = service_account.Credentials.from_service_account_file(
         SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 
     service = build('sheets', 'v4', credentials=credentials)
 
-    base_create_sheet_url = 'https://script.google.com/macros/s/AKfycbw_mh_P6b50yHADcYku4LCmkLhoxjtWIsY2NlxoDHTG' \
-                            'fiz4s4-l/exec?shareWith=fcli-user@quickstart-1549666983080.iam.gserviceaccount.com&' \
-                            'title='
+    report_title = 'User Task Report ' + date.today().strftime('%m-%d-%y')
 
-    report_title = 'User Task Report ' + date.today().strftime('%d-%m-%y')
-
-    response = requests.get(base_create_sheet_url + report_title)
+    response = requests.get(SHEET_CREATE_URL + report_title)
     response.raise_for_status()
 
     response_json = response.json()
@@ -137,8 +138,77 @@ def usertasks(username: str):
                                            ]]})
             user_sheet_row_idx += 1
 
-        # execute batch update for adding all sheets
-        # execute batch update for adding all data
+    ##################################
+
+    cli_library.echo('retrieving unassigned, in progress tasks')
+
+    unassigned_in_p_tasks_json = tasks.get_unassigned_in_progress_issues(auth)
+
+    cli_library.echo('creating json for cell data update')
+
+    add_sheet_requests.append(gen_add_sheet_req('Unassigned and In Progress'))
+
+    user_sheet_row_idx = 1
+
+    value_data.append({'range': '{}!A{}:H{}'.format('Unassigned and In Progress', user_sheet_row_idx, user_sheet_row_idx),
+                       'values': [['Key', 'Issue Type', 'Status', 'Summary', 'VFR', 'Due Date', 'Importance',
+                                   'LOE']]})
+    user_sheet_row_idx += 1
+
+    for issue in unassigned_in_p_tasks_json['issues']:
+        value_data.append({'range': '{}!A{}:H{}'.format('Unassigned and In Progress',
+                                                        user_sheet_row_idx, user_sheet_row_idx),
+                           'values': [['https://jira.cms.gov/browse/{}'.format(issue['key']),
+                                       'EL Task' if is_el(issue['fields']['labels'])
+                                       else issue['fields']['issuetype']['name'],
+                                       issue['fields']['status']['name'],
+                                       issue['fields']['summary'],
+                                       issue['fields']['customfield_18402'],
+                                       issue['fields']['customfield_19905'],
+                                       issue['fields']['customfield_19904']['value']
+                                       if issue['fields'].get('customfield_19904') is not None else None,
+                                       issue['fields']['customfield_13405']['value']
+                                       if issue['fields'].get('customfield_13405') is not None else None
+                                       ]]})
+        user_sheet_row_idx += 1
+
+    ####################################
+
+    cli_library.echo('retrieving unassigned, open tasks')
+
+    unassigned_open_tasks_json = tasks.get_unassigned_open_issues(auth)
+
+    cli_library.echo('creating json for cell data update')
+
+    add_sheet_requests.append(gen_add_sheet_req('Unassigned and Open'))
+
+    user_sheet_row_idx = 1
+
+    value_data.append(
+        {'range': '{}!A{}:H{}'.format('Unassigned and Open', user_sheet_row_idx, user_sheet_row_idx),
+         'values': [['Key', 'Issue Type', 'Status', 'Summary', 'VFR', 'Due Date', 'Importance',
+                     'LOE']]})
+    user_sheet_row_idx += 1
+
+    for issue in unassigned_open_tasks_json['issues']:
+        value_data.append({'range': '{}!A{}:H{}'.format('Unassigned and Open',
+                                                        user_sheet_row_idx, user_sheet_row_idx),
+                           'values': [['https://jira.cms.gov/browse/{}'.format(issue['key']),
+                                       'EL Task' if is_el(issue['fields']['labels'])
+                                       else issue['fields']['issuetype']['name'],
+                                       issue['fields']['status']['name'],
+                                       issue['fields']['summary'],
+                                       issue['fields']['customfield_18402'],
+                                       issue['fields']['customfield_19905'],
+                                       issue['fields']['customfield_19904']['value']
+                                       if issue['fields'].get('customfield_19904') is not None else None,
+                                       issue['fields']['customfield_13405']['value']
+                                       if issue['fields'].get('customfield_13405') is not None else None
+                                       ]]})
+        user_sheet_row_idx += 1
+
+    # execute batch update for adding all sheets
+    # execute batch update for adding all data
 
     add_response = service.spreadsheets().batchUpdate(
         spreadsheetId=spreadsheet_id,

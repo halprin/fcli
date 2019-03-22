@@ -28,3 +28,21 @@ class ComboAuth(Auth):
                 return FileAuth().password()
             except Exception:
                 return KeyboardAuth().password()
+
+    def google_service_acct_creds(self):
+        try:
+            return EnvVarAuth().google_service_acct_creds()
+        except Exception:
+            try:
+                return FileAuth().google_service_acct_creds()
+            except Exception:
+                return KeyboardAuth().google_service_acct_creds()
+
+    def sheet_create_url(self):
+        try:
+            return EnvVarAuth().sheet_create_url()
+        except Exception:
+            try:
+                return FileAuth().sheet_create_url()
+            except Exception:
+                return KeyboardAuth().sheet_create_url()

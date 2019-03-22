@@ -15,3 +15,9 @@ class FileAuth(Auth):
 
     def password(self):
         return self.ini.get('default', 'password')
+
+    def google_service_acct_creds(self):
+        return self.ini.get('gapps', 'service-acct-creds')
+
+    def sheet_create_url(self):
+        return self.ini.get('gapps', 'sheet-create-url')
