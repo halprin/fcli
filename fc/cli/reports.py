@@ -150,7 +150,8 @@ def usertasks(username: str):
 
     user_sheet_row_idx = 1
 
-    value_data.append({'range': '{}!A{}:H{}'.format('Unassigned and In Progress', user_sheet_row_idx, user_sheet_row_idx),
+    value_data.append({'range': '{}!A{}:H{}'.format('Unassigned and In Progress', user_sheet_row_idx,
+                                                    user_sheet_row_idx),
                        'values': [['Key', 'Issue Type', 'Status', 'Summary', 'VFR', 'Due Date', 'Importance',
                                    'LOE']]})
     user_sheet_row_idx += 1
@@ -235,7 +236,7 @@ def usertasks(username: str):
                                           'dimension': 'COLUMNS',
                                           'startIndex': 0,
                                           'endIndex': 7
-                                    }
+                                        }
                                 }})
 
     response = service.spreadsheets().batchUpdate(

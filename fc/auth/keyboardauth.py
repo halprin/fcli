@@ -26,6 +26,6 @@ class KeyboardAuth(Auth):
     def sheet_create_url(self):
         if not hasattr(self.__class__, '_g_sheet_create_url'):
             self.__class__._g_sheet_create_url = click.prompt('Enter the URL to create a new Google sheet',
-                                                             type=str)
+                                                              type=str)
 
         return self.__class__._g_sheet_create_url

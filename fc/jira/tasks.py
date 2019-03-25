@@ -93,11 +93,10 @@ def get_developer_users(auth: Auth) -> dict:
 
 
 def get_user_issues(user: str, auth: Auth) -> dict:
-    search_ext = 'project=qppfc+and+assignee={}+and+status+in+(refined,blocked,ready,"in+progress",triage,open)+'.format(user) +\
+    search_ext = 'project=qppfc+and+assignee={}+'.format(user) +\
+                 'and+status+in+(refined,blocked,ready,"in+progress",triage,open)+' +\
                  'order+by+duration+asc&fields=key,summary,issuetype,status,customfield_18402,customfield_18400,' +\
                  'customfield_18401,customfield_19905,customfield_19904,customfield_13405,labels'
-
-    # cli_library.echo('search url: {}'.format(search_url.format(search_ext)))
 
     response = requests.get(search_url.format(search_ext), auth=HTTPBasicAuth(auth.username(), auth.password()))
     response.raise_for_status()

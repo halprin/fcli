@@ -148,7 +148,7 @@ def check(username: str):
 
     update_cells_requests.append({'autoResizeDimensions': {
                                         'dimensions': {
-                                            'sheetId': 0, # the default sheet id is always 0
+                                            'sheetId': 0,  # the default sheet id is always 0
                                             'dimension': 'COLUMNS',
                                             'startIndex': 0,
                                             'endIndex': 3
