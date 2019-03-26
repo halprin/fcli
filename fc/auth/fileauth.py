@@ -4,7 +4,7 @@ import os
 
 
 class FileAuth(Auth):
-    _file = '~/.fcli/.fcli-creds'
+    _file = '~/.fcli'
 
     def __init__(self):
         self.ini = ConfigParser()

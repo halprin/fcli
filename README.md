@@ -33,7 +33,7 @@ Again, `sudo` may be required.
 credentials.
 
 ### File
-Create an ini file at `~/.fcli/.fcli-creds`.  In there, add the `[default]` section, and under that section specify a `username` and
+Create an ini file at `~/.fcli`.  In there, add the `[default]` section, and under that section specify a `username` and
 `password`.  An example can be seen in [fcli.ini](./fcli.ini).
 Additionally, if you need the reporting functionality, add a `[gapps]` section and under that section specify `service-acct-creds` and
 `sheet-create-url`.  `service-acct-creds` is a full path to a credentials file to use with Google Apps and `sheet-create-url` is a URL
