@@ -138,7 +138,7 @@ team.
 
 The VFR Sanity Check report can be generated using
 ```bash
-$ fcli vfrsanity check
+$ fcli reports vfrsanity
 ```
 
 This report will create a Google sheet with two tabs.  The first will order and group all stories by Duration value and
