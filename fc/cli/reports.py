@@ -6,6 +6,7 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 import requests
 from typing import Sequence
+from typing import Tuple
 from datetime import date
 
 
@@ -22,22 +23,25 @@ def usertasks(username: str):
     auth = ComboAuth(username)
 
     # setup and build credentials for google api calls
-    SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive.file']
-    SERVICE_ACCOUNT_FILE = auth.google_service_acct_creds()
-    SHEET_CREATE_URL = auth.sheet_create_url()
+    g_scopes = None
+    g_service_acct_file = None
+    g_sheet_create_url = None
 
-    if SERVICE_ACCOUNT_FILE is None or SHEET_CREATE_URL is None:
+    (g_scopes, g_service_acct_file, g_sheet_create_url) = build_google_creds(auth)
+
+    if g_service_acct_file is None or g_sheet_create_url is None:
         cli_library.echo('Google service account credential file path and sheet create url must be defined '
                          'in order to generate a report file.')
+        return
 
     credentials = service_account.Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+        g_service_acct_file, scopes=g_scopes)
 
     service = build('sheets', 'v4', credentials=credentials)
 
-    report_title = 'User Task Report ' + date.today().strftime('%m-%d-%y')
+    report_title = 'User Task Report {}'.format(date.today().strftime('%m-%d-%y'))
 
-    response = requests.get(SHEET_CREATE_URL + report_title)
+    response = requests.get(g_sheet_create_url + report_title)
     response.raise_for_status()
 
     response_json = response.json()
@@ -122,20 +126,7 @@ def usertasks(username: str):
         cli_library.echo('creating json for cell data update')
 
         for issue in user_tasks_json['issues']:
-            value_data.append({'range': '{}!A{}:H{}'.format(user['displayName'],
-                                                            user_sheet_row_idx, user_sheet_row_idx),
-                               'values': [['https://jira.cms.gov/browse/{}'.format(issue['key']),
-                                          'EL Task' if is_el(issue['fields']['labels'])
-                                           else issue['fields']['issuetype']['name'],
-                                           issue['fields']['status']['name'],
-                                           issue['fields']['summary'],
-                                           issue['fields']['customfield_18402'],
-                                           issue['fields']['customfield_19905'],
-                                           issue['fields']['customfield_19904']['value']
-                                           if issue['fields'].get('customfield_19904') is not None else None,
-                                           issue['fields']['customfield_13405']['value']
-                                           if issue['fields'].get('customfield_13405') is not None else None
-                                           ]]})
+            value_data.append(build_issue_row(user['displayName'], user_sheet_row_idx, issue))
             user_sheet_row_idx += 1
 
     ##################################
@@ -157,20 +148,7 @@ def usertasks(username: str):
     user_sheet_row_idx += 1
 
     for issue in unassigned_in_p_tasks_json['issues']:
-        value_data.append({'range': '{}!A{}:H{}'.format('Unassigned and In Progress',
-                                                        user_sheet_row_idx, user_sheet_row_idx),
-                           'values': [['https://jira.cms.gov/browse/{}'.format(issue['key']),
-                                       'EL Task' if is_el(issue['fields']['labels'])
-                                       else issue['fields']['issuetype']['name'],
-                                       issue['fields']['status']['name'],
-                                       issue['fields']['summary'],
-                                       issue['fields']['customfield_18402'],
-                                       issue['fields']['customfield_19905'],
-                                       issue['fields']['customfield_19904']['value']
-                                       if issue['fields'].get('customfield_19904') is not None else None,
-                                       issue['fields']['customfield_13405']['value']
-                                       if issue['fields'].get('customfield_13405') is not None else None
-                                       ]]})
+        value_data.append(build_issue_row('Unassigned and In Progress', user_sheet_row_idx, issue))
         user_sheet_row_idx += 1
 
     ####################################
@@ -192,20 +170,7 @@ def usertasks(username: str):
     user_sheet_row_idx += 1
 
     for issue in unassigned_open_tasks_json['issues']:
-        value_data.append({'range': '{}!A{}:H{}'.format('Unassigned and Open',
-                                                        user_sheet_row_idx, user_sheet_row_idx),
-                           'values': [['https://jira.cms.gov/browse/{}'.format(issue['key']),
-                                       'EL Task' if is_el(issue['fields']['labels'])
-                                       else issue['fields']['issuetype']['name'],
-                                       issue['fields']['status']['name'],
-                                       issue['fields']['summary'],
-                                       issue['fields']['customfield_18402'],
-                                       issue['fields']['customfield_19905'],
-                                       issue['fields']['customfield_19904']['value']
-                                       if issue['fields'].get('customfield_19904') is not None else None,
-                                       issue['fields']['customfield_13405']['value']
-                                       if issue['fields'].get('customfield_13405') is not None else None
-                                       ]]})
+        value_data.append(build_issue_row('Unassigned and Open', user_sheet_row_idx, issue))
         user_sheet_row_idx += 1
 
     # execute batch update for adding all sheets
@@ -230,14 +195,7 @@ def usertasks(username: str):
     }
 
     for reply in add_response['replies']:
-        sheet_update_requests.append({'autoResizeDimensions': {
-                                        'dimensions': {
-                                          'sheetId': reply['addSheet']['properties']['sheetId'],
-                                          'dimension': 'COLUMNS',
-                                          'startIndex': 0,
-                                          'endIndex': 7
-                                        }
-                                }})
+        sheet_update_requests.append(build_auto_resize_details(reply['addSheet']['properties']['sheetId'], 0, 7))
 
     response = service.spreadsheets().batchUpdate(
         spreadsheetId=spreadsheet_id,
@@ -253,12 +211,17 @@ def vfrsanity(username: str):
 
     auth = ComboAuth(username)
 
-    SERVICE_ACCOUNT_FILE = auth.google_service_acct_creds()
-    SHEET_CREATE_URL = auth.sheet_create_url()
+    # setup and build credentials for google api calls
+    g_scopes = None
+    g_service_acct_file = None
+    g_sheet_create_url = None
 
-    if SERVICE_ACCOUNT_FILE is None or SHEET_CREATE_URL is None:
+    (g_scopes, g_service_acct_file, g_sheet_create_url) = build_google_creds(auth)
+
+    if g_service_acct_file is None or g_sheet_create_url is None:
         cli_library.echo('Google service account credential file path and sheet create url must be defined '
                          'in order to generate a report file.')
+        return
 
     cli_library.echo('retrieving all stories')
 
@@ -267,17 +230,14 @@ def vfrsanity(username: str):
 
     cli_library.echo('story retrieval complete')
 
-    # setup and build credentials for google api calls
-    SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive.file']
-
     credentials = service_account.Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+        g_service_acct_file, scopes=g_scopes)
 
     service = build('sheets', 'v4', credentials=credentials)
 
-    report_title = 'VFR Sanity Check ' + date.today().strftime('%m-%d-%y')
+    report_title = 'VFR Sanity Check {}'.format(date.today().strftime('%m-%d-%y'))
 
-    response = requests.get(SHEET_CREATE_URL + report_title)
+    response = requests.get(g_sheet_create_url + report_title)
 
     response.raise_for_status()
 
@@ -315,7 +275,7 @@ def vfrsanity(username: str):
     # here's a header row
     data = [{'range': 'A1:D1',
              'values': [['Cost of Delay', 'Issue key', 'Summary', 'Duration']]}]
-    idx = 2
+    row_idx = 2
 
     # create an array of requests that will hold "updateCells" requests
     # these are rows that will have the background color changed
@@ -328,17 +288,6 @@ def vfrsanity(username: str):
     # create a var to hold the "previous" duration value
     prev_duration = 0
 
-    color_format_json = {
-                          'userEnteredFormat': {
-                              'backgroundColor': {
-                                  'red': 0,
-                                  'green': 0.4,
-                                  'blue': 0,
-                                  'alpha': 1.0
-                              }
-                          }
-                        }
-
     cli_library.echo('generating data for duration sheet cells')
 
     # iterate through the json results and build up all the other rows of data
@@ -346,47 +295,18 @@ def vfrsanity(username: str):
         # if idx > 2, then check to see if current duration val is different from "previous" val
         # if so, then add an updateCells request and increment counter, then append row of data
         # by default we always append a row of data
-        if idx == 2:
+        if row_idx == 2:
             prev_duration = issue['fields']['customfield_18400']
-        if idx > 2 and issue['fields']['customfield_18400'] != prev_duration:
-            update_cells_requests.append({'updateCells': {
-                                              'rows': [
-                                                  {
-                                                      'values': [
-                                                          color_format_json,
-                                                          color_format_json,
-                                                          color_format_json,
-                                                          color_format_json
-                                                      ]
-                                                  }
-                                              ],
-                                              'fields': '*',
-                                              'range': {
-                                                      "sheetId": 0,
-                                                      "startRowIndex": idx - 1,
-                                                      "endRowIndex": idx,
-                                                      "startColumnIndex": 0,
-                                                      "endColumnIndex": 5
-                                              }
-                                            }})
-            prev_duration = issue['fields']['customfield_18400']
-            idx += 1
-        data.append({'range': 'A{}:D{}'.format(idx, idx),
-                     'values': [[issue['fields']['customfield_18401'],
-                                 'https://jira.cms.gov/browse/{}'.format(issue['key']),
-                                 issue['fields']['summary'],
-                                 issue['fields']['customfield_18400']
-                                 ]]})
-        idx += 1
+        if row_idx > 2 and issue['fields']['customfield_18400'] != prev_duration:
+            update_cells_requests.append(build_color_update_details(0, row_idx - 1, row_idx, 0, 5))
 
-    update_cells_requests.append({'autoResizeDimensions': {
-                                        'dimensions': {
-                                            'sheetId': 0,  # the default sheet id is always 0
-                                            'dimension': 'COLUMNS',
-                                            'startIndex': 0,
-                                            'endIndex': 3
-                                        }
-                                  }})
+            prev_duration = issue['fields']['customfield_18400']
+            row_idx += 1
+        data.append(build_vfr_details('', row_idx, row_idx, issue))
+
+        row_idx += 1
+
+    update_cells_requests.append(build_auto_resize_details(0, 0, 3))
 
     response = service.spreadsheets().batchUpdate(
         spreadsheetId=spreadsheet_id,
@@ -433,7 +353,7 @@ def vfrsanity(username: str):
     # build the data for the cost of delay sheet
     data = [{'range': 'Cost of Delay!A1:D1',
              'values': [['Cost of Delay', 'Issue key', 'Summary', 'Duration']]}]
-    idx = 2
+    row_idx = 2
 
     # create an array of requests that will hold "updateCells" requests
     # these are rows that will have the background color changed
@@ -452,47 +372,18 @@ def vfrsanity(username: str):
         # if idx > 2, then check to see if current duration val is different from "previous" val
         # if so, then add an updateCells request and increment counter, then append row of data
         # by default we always append a row of data
-        if idx == 2:
+        if row_idx == 2:
             prev_cod = issue['fields']['customfield_18401']
-        if idx > 2 and issue['fields']['customfield_18401'] != prev_cod:
-            update_cells_requests.append({'updateCells': {
-                'rows': [
-                    {
-                        'values': [
-                            color_format_json,
-                            color_format_json,
-                            color_format_json,
-                            color_format_json
-                        ]
-                    }
-                ],
-                'fields': '*',
-                'range': {
-                    "sheetId": cod_grid_id,
-                    "startRowIndex": idx - 1,
-                    "endRowIndex": idx,
-                    "startColumnIndex": 0,
-                    "endColumnIndex": 5
-                }
-            }})
-            prev_cod = issue['fields']['customfield_18401']
-            idx += 1
-        data.append({'range': 'Cost of Delay!A{0}:D{0}'.format(idx),
-                     'values': [[issue['fields']['customfield_18401'],
-                                 'https://jira.cms.gov/browse/{0}'.format(issue['key']),
-                                 issue['fields']['summary'],
-                                 issue['fields']['customfield_18400']
-                                 ]]})
-        idx += 1
+        if row_idx > 2 and issue['fields']['customfield_18401'] != prev_cod:
+            update_cells_requests.append(build_color_update_details(cod_grid_id, row_idx - 1, row_idx, 0, 5))
 
-    update_cells_requests.append({'autoResizeDimensions': {
-                                    'dimensions': {
-                                        'sheetId': cod_grid_id,
-                                        'dimension': 'COLUMNS',
-                                        'startIndex': 0,
-                                        'endIndex': 3
-                                    }
-                                }})
+            prev_cod = issue['fields']['customfield_18401']
+            row_idx += 1
+        data.append(build_vfr_details('Cost of Delay!', row_idx, row_idx, issue))
+
+        row_idx += 1
+
+    update_cells_requests.append(build_auto_resize_details(cod_grid_id, 0, 3))
 
     response = service.spreadsheets().batchUpdate(
         spreadsheetId=cod_sheet_id,
@@ -529,3 +420,83 @@ def is_el(labels: Sequence[str]) -> bool:
             return True
         else:
             return False
+
+
+def build_google_creds(auth: ComboAuth) -> Tuple:
+    scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive.file']
+    service_account_file = auth.google_service_acct_creds()
+    sheet_create_url = auth.sheet_create_url()
+
+    return scopes, service_account_file, sheet_create_url
+
+
+def build_issue_row(display_string: str, row_index: int, issue: dict) -> dict:
+    return {'range': '{}!A{}:H{}'.format(display_string,
+                                         row_index, row_index),
+            'values': [['https://jira.cms.gov/browse/{}'.format(issue['key']),
+                       'EL Task' if is_el(issue['fields']['labels'])
+                        else issue['fields']['issuetype']['name'],
+                        issue['fields']['status']['name'],
+                        issue['fields']['summary'],
+                        issue['fields']['customfield_18402'],
+                        issue['fields']['customfield_19905'],
+                        issue['fields']['customfield_19904']['value']
+                        if issue['fields'].get('customfield_19904') is not None else None,
+                        issue['fields']['customfield_13405']['value']
+                        if issue['fields'].get('customfield_13405') is not None else None
+                        ]]}
+
+
+def build_auto_resize_details(sheet_id: dict, start_idx: int, end_idx: int) -> dict:
+    return {'autoResizeDimensions': {
+        'dimensions': {
+            'sheetId': sheet_id,
+            'dimension': 'COLUMNS',
+            'startIndex': start_idx,
+            'endIndex': end_idx
+        }
+    }}
+
+
+def build_color_update_details(sheet_id: int, start_row_index: int, end_row_index: int,
+                               start_column_index: int, end_column_index: int) -> dict:
+    color_format_json = {
+        'userEnteredFormat': {
+            'backgroundColor': {
+                'red': 0,
+                'green': 0.4,
+                'blue': 0,
+                'alpha': 1.0
+            }
+        }
+    }
+
+    return {'updateCells': {
+        'rows': [
+            {
+                'values': [
+                    color_format_json,
+                    color_format_json,
+                    color_format_json,
+                    color_format_json
+                ]
+            }
+        ],
+        'fields': '*',
+        'range': {
+            "sheetId": sheet_id,
+            "startRowIndex": start_row_index,
+            "endRowIndex": end_row_index,
+            "startColumnIndex": start_column_index,
+            "endColumnIndex": end_column_index
+        }
+    }}
+
+
+def build_vfr_details(sheet_name: str, start_row_index: int, end_row_index: int, issue: dict) -> dict:
+    return {'range': '{}A{}:D{}'.format(sheet_name, start_row_index, end_row_index),
+            'values': [[issue['fields']['customfield_18401'],
+                        'https://jira.cms.gov/browse/{}'.format(issue['key']),
+                        issue['fields']['summary'],
+                        issue['fields']['customfield_18400']
+                      ]]}
