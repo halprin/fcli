@@ -10,10 +10,8 @@ from . import cli_library
 def watch(username: str, issue_ids: tuple):
     auth = ComboAuth(username)
 
-    uname = auth.username()
-
     for i in issue_ids:
-        click.echo("Adding '{}' to the watchlist for {}".format(uname, i))
+        click.echo("Adding '{}' to the watchlist for {}".format(auth.username(), i))
 
         the_issue = None
 
@@ -23,7 +21,7 @@ def watch(username: str, issue_ids: tuple):
             cli_library.fail_execution(1, 'Issue retrieval failed with {}'.format(e))
 
         if the_issue is not None:
-            the_issue.watch(uname)
+            the_issue.watch(auth.username())
             click.echo("Successfully added '{}' to {}".format(auth.username(), i))
         else:
             cli_library.fail_execution(2, 'Failed to modify watchlist for {}'.format(i))
