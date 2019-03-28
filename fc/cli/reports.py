@@ -499,4 +499,5 @@ def build_vfr_details(sheet_name: str, start_row_index: int, end_row_index: int,
                         'https://jira.cms.gov/browse/{}'.format(issue['key']),
                         issue['fields']['summary'],
                         issue['fields']['customfield_18400']
-                      ]]}
+                        ]
+                       ]}
