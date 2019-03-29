@@ -55,12 +55,12 @@ def watch(username: str, task_ids: tuple):
         cli_library.echo("Adding '{}' to the watchlist for {}".format(auth.username(), task_id))
 
         try:
-            the_issue = Issue.get_issue(task_id, auth)
+            the_task = Issue.get_issue(task_id, auth)
         except Exception as e:
             cli_library.fail_execution(1, 'Issue retrieval failed with {}'.format(e))
 
         try:
-            the_issue.watch(auth.username())
+            the_task.watch(auth.username())
             cli_library.echo("Successfully added '{}' to {}".format(auth.username(), task_id))
         except Exception as e:
             cli_library.fail_execution(2, 'Failed to modify watchlist for {}'.format(task_id))
