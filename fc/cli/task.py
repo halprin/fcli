@@ -1,5 +1,6 @@
 import click
 from ..jira.fcissue import FcIssue
+from ..jira.issue import Issue
 from ..auth.combo import ComboAuth
 from ..jira import tasks
 from . import cli_library
@@ -43,3 +44,23 @@ def score(username):
     auth = ComboAuth(username)
 
     tasks.score_triage_and_el_tasks(auth)
+
+@task.command()
+@click.option('--username')
+@click.argument('task_ids', nargs=-1, metavar='ISSUE-1 ISSUE-2 ISSUE-3 etc.')
+def watch(username: str, task_ids: tuple):
+    auth = ComboAuth(username)
+
+    for task_id in task_ids:
+        cli_library.echo("Adding '{}' to the watchlist for {}".format(auth.username(), task_id))
+
+        try:
+            the_issue = Issue.get_issue(task_id, auth)
+        except Exception as e:
+            cli_library.fail_execution(1, 'Issue retrieval failed with {}'.format(e))
+
+        try:
+            the_issue.watch(auth.username())
+            cli_library.echo("Successfully added '{}' to {}".format(auth.username(), task_id))
+        except Exception as e:
+            cli_library.fail_execution(2, 'Failed to modify watchlist for {}'.format(task_id))

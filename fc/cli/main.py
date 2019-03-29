@@ -5,7 +5,6 @@ from . import el
 from . import version
 from . import task
 from . import comment
-from . import watch
 
 
 @click.group()
@@ -19,4 +18,3 @@ cli.add_command(el.el)
 cli.add_command(version.version)
 cli.add_command(task.task)
 cli.add_command(comment.comment)
-cli.add_command(watch.watch)
