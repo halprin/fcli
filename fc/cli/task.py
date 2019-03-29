@@ -45,6 +45,7 @@ def score(username):
 
     tasks.score_triage_and_el_tasks(auth)
 
+
 @task.command()
 @click.option('--username')
 @click.argument('task_ids', nargs=-1, metavar='ISSUE-1 ISSUE-2 ISSUE-3 etc.')
