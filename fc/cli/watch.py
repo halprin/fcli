@@ -2,6 +2,7 @@ import click
 from ..jira.issue import Issue
 from ..auth.combo import ComboAuth
 from . import cli_library
+from requests import HTTPError
 
 
 @click.command()
@@ -10,18 +11,18 @@ from . import cli_library
 def watch(username: str, issue_ids: tuple):
     auth = ComboAuth(username)
 
-    for i in issue_ids:
-        click.echo("Adding '{}' to the watchlist for {}".format(auth.username(), i))
+    for issue_id in issue_ids:
+        click.echo("Adding '{}' to the watchlist for {}".format(auth.username(), issue_id))
 
         the_issue = None
 
         try:
-            the_issue = Issue.get_issue(i, auth)
+            the_issue = Issue.get_issue(issue_id, auth)
         except Exception as e:
             cli_library.fail_execution(1, 'Issue retrieval failed with {}'.format(e))
 
-        if the_issue is not None:
+        try:
             the_issue.watch(auth.username())
-            click.echo("Successfully added '{}' to {}".format(auth.username(), i))
-        else:
-            cli_library.fail_execution(2, 'Failed to modify watchlist for {}'.format(i))
+            click.echo("Successfully added '{}' to {}".format(auth.username(), issue_id))
+        except HTTPError as e:
+            cli_library.fail_execution(2, 'Failed to modify watchlist for {}'.format(issue_id))
