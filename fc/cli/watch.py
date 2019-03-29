@@ -12,7 +12,7 @@ def watch(username: str, issue_ids: tuple):
     auth = ComboAuth(username)
 
     for issue_id in issue_ids:
-        click.echo("Adding '{}' to the watchlist for {}".format(auth.username(), issue_id))
+        cli_library.echo("Adding '{}' to the watchlist for {}".format(auth.username(), issue_id))
 
         the_issue = None
 
@@ -23,6 +23,6 @@ def watch(username: str, issue_ids: tuple):
 
         try:
             the_issue.watch(auth.username())
-            click.echo("Successfully added '{}' to {}".format(auth.username(), issue_id))
+            cli_library.echo("Successfully added '{}' to {}".format(auth.username(), issue_id))
         except HTTPError as e:
             cli_library.fail_execution(2, 'Failed to modify watchlist for {}'.format(issue_id))
