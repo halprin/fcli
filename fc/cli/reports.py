@@ -3,7 +3,7 @@ from ..auth.combo import ComboAuth
 from ..jira import tasks
 from . import cli_library
 from google.oauth2 import service_account
-from googleapiclient.discovery import build
+from googleapiclient.discovery import build, Resource
 import requests
 from typing import Sequence
 from typing import Tuple
@@ -23,10 +23,6 @@ def usertasks(username: str):
     auth = ComboAuth(username)
 
     # setup and build credentials for google api calls
-    g_scopes = None
-    g_service_acct_file = None
-    g_sheet_create_url = None
-
     (g_scopes, g_service_acct_file, g_sheet_create_url) = build_google_creds(auth)
 
     if g_service_acct_file is None or g_sheet_create_url is None:
@@ -96,82 +92,15 @@ def usertasks(username: str):
         'data': value_data
     }
 
-    name_sheet_row_idx = 1
-
-    value_data.append({'range': 'A{}:B{}'.format(name_sheet_row_idx, name_sheet_row_idx),
-                       'values': [['Name', 'EUA']]})
-    name_sheet_row_idx += 1
-
-    dev_user_json = tasks.get_developer_users(auth)
-
-    user_sheet_row_idx = 1
-    user_tasks_json = None
-
-    for user in dev_user_json['actors']:
-        value_data.append({'range': 'A{}:B{}'.format(name_sheet_row_idx, name_sheet_row_idx),
-                           'values': [[user['displayName'], user['name']]]})
-        name_sheet_row_idx += 1
-
-        add_sheet_requests.append(gen_add_sheet_req(user['displayName']))
-
-        user_sheet_row_idx = 1
-
-        value_data.append({'range': '{}!A{}:H{}'.format(user['displayName'], user_sheet_row_idx, user_sheet_row_idx),
-                           'values': [['Key', 'Issue Type', 'Status', 'Summary', 'VFR', 'Due Date', 'Importance',
-                                      'LOE']]})
-        user_sheet_row_idx += 1
-
-        user_tasks_json = tasks.get_user_issues(user['name'], auth)
-
-        cli_library.echo('creating json for cell data update')
-
-        for issue in user_tasks_json['issues']:
-            value_data.append(build_issue_row(user['displayName'], user_sheet_row_idx, issue))
-            user_sheet_row_idx += 1
+    build_user_data(auth, value_data, add_sheet_requests)
 
     ##################################
 
-    cli_library.echo('retrieving unassigned, in progress tasks')
-
-    unassigned_in_p_tasks_json = tasks.get_unassigned_in_progress_issues(auth)
-
-    cli_library.echo('creating json for cell data update')
-
-    add_sheet_requests.append(gen_add_sheet_req('Unassigned and In Progress'))
-
-    user_sheet_row_idx = 1
-
-    value_data.append({'range': '{}!A{}:H{}'.format('Unassigned and In Progress', user_sheet_row_idx,
-                                                    user_sheet_row_idx),
-                       'values': [['Key', 'Issue Type', 'Status', 'Summary', 'VFR', 'Due Date', 'Importance',
-                                   'LOE']]})
-    user_sheet_row_idx += 1
-
-    for issue in unassigned_in_p_tasks_json['issues']:
-        value_data.append(build_issue_row('Unassigned and In Progress', user_sheet_row_idx, issue))
-        user_sheet_row_idx += 1
+    build_unassigned_data(auth, value_data, add_sheet_requests)
 
     ####################################
 
-    cli_library.echo('retrieving unassigned, open tasks')
-
-    unassigned_open_tasks_json = tasks.get_unassigned_open_issues(auth)
-
-    cli_library.echo('creating json for cell data update')
-
-    add_sheet_requests.append(gen_add_sheet_req('Unassigned and Open'))
-
-    user_sheet_row_idx = 1
-
-    value_data.append(
-        {'range': '{}!A{}:H{}'.format('Unassigned and Open', user_sheet_row_idx, user_sheet_row_idx),
-         'values': [['Key', 'Issue Type', 'Status', 'Summary', 'VFR', 'Due Date', 'Importance',
-                     'LOE']]})
-    user_sheet_row_idx += 1
-
-    for issue in unassigned_open_tasks_json['issues']:
-        value_data.append(build_issue_row('Unassigned and Open', user_sheet_row_idx, issue))
-        user_sheet_row_idx += 1
+    build_unassigned_open_data(auth, value_data, add_sheet_requests)
 
     # execute batch update for adding all sheets
     # execute batch update for adding all data
@@ -212,23 +141,12 @@ def vfrsanity(username: str):
     auth = ComboAuth(username)
 
     # setup and build credentials for google api calls
-    g_scopes = None
-    g_service_acct_file = None
-    g_sheet_create_url = None
-
     (g_scopes, g_service_acct_file, g_sheet_create_url) = build_google_creds(auth)
 
     if g_service_acct_file is None or g_sheet_create_url is None:
         cli_library.echo('Google service account credential file path and sheet create url must be defined '
                          'in order to generate a report file.')
         return
-
-    cli_library.echo('retrieving all stories')
-
-    # get stories ordered by duration
-    jsonr = tasks.search_for_stories_ord_duration(auth)
-
-    cli_library.echo('story retrieval complete')
 
     credentials = service_account.Credentials.from_service_account_file(
         g_service_acct_file, scopes=g_scopes)
@@ -271,134 +189,11 @@ def vfrsanity(username: str):
 
     cli_library.echo('default sheet title updated')
 
-    # create arrays of data to put into the sheet
-    # here's a header row
-    data = [{'range': 'A1:D1',
-             'values': [['Cost of Delay', 'Issue key', 'Summary', 'Duration']]}]
-    row_idx = 2
-
-    # create an array of requests that will hold "updateCells" requests
-    # these are rows that will have the background color changed
-    update_cells_requests = []
-
-    update_cells = {
-        'requests': update_cells_requests
-    }
-
-    # create a var to hold the "previous" duration value
-    prev_duration = 0
-
-    cli_library.echo('generating data for duration sheet cells')
-
-    # iterate through the json results and build up all the other rows of data
-    for issue in jsonr['issues']:
-        # if idx > 2, then check to see if current duration val is different from "previous" val
-        # if so, then add an updateCells request and increment counter, then append row of data
-        # by default we always append a row of data
-        if row_idx == 2:
-            prev_duration = issue['fields']['customfield_18400']
-        if row_idx > 2 and issue['fields']['customfield_18400'] != prev_duration:
-            update_cells_requests.append(build_color_update_details(0, row_idx - 1, row_idx, 0, 5))
-
-            prev_duration = issue['fields']['customfield_18400']
-            row_idx += 1
-        data.append(build_vfr_details('', row_idx, row_idx, issue))
-
-        row_idx += 1
-
-    update_cells_requests.append(build_auto_resize_details(0, 0, 3))
-
-    response = service.spreadsheets().batchUpdate(
-        spreadsheetId=spreadsheet_id,
-        body=update_cells).execute()
-
-    cli_library.echo('duration cell formats updated')
-
-    body = {
-        'valueInputOption': 'USER_ENTERED',
-        'data': data
-    }
-    result = service.spreadsheets().values().batchUpdate(
-        spreadsheetId=spreadsheet_id, body=body).execute()
-
-    cli_library.echo('duration cell data updated')
+    # Add Duration sheet data here
+    build_vfr_duration_sheet(auth, spreadsheet_id, service)
 
     # add a second sheet to the google spreadsheet for cost of delay
-    sheet_add = {
-        'requests': {
-            'addSheet': {
-                'properties': {
-                    'title': 'Cost of Delay'
-                }
-            }
-        }
-    }
-
-    add_response = service.spreadsheets().batchUpdate(
-        spreadsheetId=spreadsheet_id,
-        body=sheet_add).execute()
-
-    cli_library.echo('added cost of delay sheet')
-
-    cod_sheet_id = add_response['spreadsheetId']
-    cod_grid_id = add_response['replies'][0]['addSheet']['properties']['sheetId']
-
-    cli_library.echo('retrieving stories for cost of delay')
-
-    # retrieve stories ordered by cost of delay
-    jsonr = tasks.search_for_stories_ord_cod(auth)
-
-    cli_library.echo('cost of delay stories retrieved')
-
-    # build the data for the cost of delay sheet
-    data = [{'range': 'Cost of Delay!A1:D1',
-             'values': [['Cost of Delay', 'Issue key', 'Summary', 'Duration']]}]
-    row_idx = 2
-
-    # create an array of requests that will hold "updateCells" requests
-    # these are rows that will have the background color changed
-    update_cells_requests = []
-
-    update_cells = {
-        'requests': update_cells_requests
-    }
-
-    # create a var to hold the "previous" cod value
-    prev_cod = 0
-
-    cli_library.echo('generating cell data for cost of delay sheet')
-
-    for issue in jsonr['issues']:
-        # if idx > 2, then check to see if current duration val is different from "previous" val
-        # if so, then add an updateCells request and increment counter, then append row of data
-        # by default we always append a row of data
-        if row_idx == 2:
-            prev_cod = issue['fields']['customfield_18401']
-        if row_idx > 2 and issue['fields']['customfield_18401'] != prev_cod:
-            update_cells_requests.append(build_color_update_details(cod_grid_id, row_idx - 1, row_idx, 0, 5))
-
-            prev_cod = issue['fields']['customfield_18401']
-            row_idx += 1
-        data.append(build_vfr_details('Cost of Delay!', row_idx, row_idx, issue))
-
-        row_idx += 1
-
-    update_cells_requests.append(build_auto_resize_details(cod_grid_id, 0, 3))
-
-    response = service.spreadsheets().batchUpdate(
-        spreadsheetId=cod_sheet_id,
-        body=update_cells).execute()
-
-    cli_library.echo('cost of delay cell formats updated')
-
-    body = {
-        'valueInputOption': 'USER_ENTERED',
-        'data': data
-    }
-    result = service.spreadsheets().values().batchUpdate(
-        spreadsheetId=cod_sheet_id, body=body).execute()
-
-    cli_library.echo('cost of delay cell data updated')
+    build_vfr_cost_of_delay_sheet(auth, spreadsheet_id, service)
 
 
 def gen_add_sheet_req(sheet_name: str) -> dict:
@@ -501,3 +296,219 @@ def build_vfr_details(sheet_name: str, start_row_index: int, end_row_index: int,
                         issue['fields']['customfield_18400']
                         ]
                        ]}
+
+
+def build_user_data(auth: ComboAuth, value_data: Sequence[dict], add_sheet_requests: Sequence[dict]):
+    name_sheet_row_idx = 1
+
+    value_data.append({'range': 'A{}:B{}'.format(name_sheet_row_idx, name_sheet_row_idx),
+                       'values': [['Name', 'EUA']]})
+    name_sheet_row_idx += 1
+
+    dev_user_json = tasks.get_developer_users(auth)
+
+    for user in dev_user_json['actors']:
+        value_data.append({'range': 'A{}:B{}'.format(name_sheet_row_idx, name_sheet_row_idx),
+                           'values': [[user['displayName'], user['name']]]})
+        name_sheet_row_idx += 1
+
+        add_sheet_requests.append(gen_add_sheet_req(user['displayName']))
+
+        user_sheet_row_idx = 1
+
+        value_data.append({'range': '{}!A{}:H{}'.format(user['displayName'], user_sheet_row_idx, user_sheet_row_idx),
+                           'values': [['Key', 'Issue Type', 'Status', 'Summary', 'VFR', 'Due Date', 'Importance',
+                                       'LOE']]})
+        user_sheet_row_idx += 1
+
+        user_tasks_json = tasks.get_user_issues(user['name'], auth)
+
+        cli_library.echo('creating json for cell data update')
+
+        for issue in user_tasks_json['issues']:
+            value_data.append(build_issue_row(user['displayName'], user_sheet_row_idx, issue))
+            user_sheet_row_idx += 1
+
+
+def build_unassigned_data(auth: ComboAuth, value_data: Sequence[dict], add_sheet_requests: Sequence[dict]):
+    cli_library.echo('retrieving unassigned, in progress tasks')
+
+    unassigned_in_p_tasks_json = tasks.get_unassigned_in_progress_issues(auth)
+
+    cli_library.echo('creating json for cell data update')
+
+    add_sheet_requests.append(gen_add_sheet_req('Unassigned and In Progress'))
+
+    user_sheet_row_idx = 1
+
+    value_data.append({'range': '{}!A{}:H{}'.format('Unassigned and In Progress', user_sheet_row_idx,
+                                                    user_sheet_row_idx),
+                       'values': [['Key', 'Issue Type', 'Status', 'Summary', 'VFR', 'Due Date', 'Importance',
+                                   'LOE']]})
+    user_sheet_row_idx += 1
+
+    for issue in unassigned_in_p_tasks_json['issues']:
+        value_data.append(build_issue_row('Unassigned and In Progress', user_sheet_row_idx, issue))
+        user_sheet_row_idx += 1
+
+
+def build_unassigned_open_data(auth: ComboAuth, value_data: Sequence[dict], add_sheet_requests: Sequence[dict]):
+    cli_library.echo('retrieving unassigned, open tasks')
+
+    unassigned_open_tasks_json = tasks.get_unassigned_open_issues(auth)
+
+    cli_library.echo('creating json for cell data update')
+
+    add_sheet_requests.append(gen_add_sheet_req('Unassigned and Open'))
+
+    user_sheet_row_idx = 1
+
+    value_data.append(
+        {'range': '{}!A{}:H{}'.format('Unassigned and Open', user_sheet_row_idx, user_sheet_row_idx),
+         'values': [['Key', 'Issue Type', 'Status', 'Summary', 'VFR', 'Due Date', 'Importance',
+                     'LOE']]})
+    user_sheet_row_idx += 1
+
+    for issue in unassigned_open_tasks_json['issues']:
+        value_data.append(build_issue_row('Unassigned and Open', user_sheet_row_idx, issue))
+        user_sheet_row_idx += 1
+
+
+def build_vfr_duration_sheet(auth: ComboAuth, spreadsheet_id: int, service: Resource):
+
+    cli_library.echo('retrieving all stories')
+
+    # get stories ordered by duration
+    jsonr = tasks.search_for_stories_ord_duration(auth)
+
+    cli_library.echo('story retrieval complete')
+
+    # create arrays of data to put into the sheet
+    # here's a header row
+    data = [{'range': 'A1:D1',
+             'values': [['Cost of Delay', 'Issue key', 'Summary', 'Duration']]}]
+    row_idx = 2
+
+    # create an array of requests that will hold "updateCells" requests
+    # these are rows that will have the background color changed
+    update_cells_requests = []
+
+    update_cells = {
+        'requests': update_cells_requests
+    }
+
+    # create a var to hold the "previous" duration value
+    prev_duration = 0
+
+    cli_library.echo('generating data for duration sheet cells')
+
+    # iterate through the json results and build up all the other rows of data
+    for issue in jsonr['issues']:
+        # if idx > 2, then check to see if current duration val is different from "previous" val
+        # if so, then add an updateCells request and increment counter, then append row of data
+        # by default we always append a row of data
+        if row_idx == 2:
+            prev_duration = issue['fields']['customfield_18400']
+        if row_idx > 2 and issue['fields']['customfield_18400'] != prev_duration:
+            update_cells_requests.append(build_color_update_details(0, row_idx - 1, row_idx, 0, 5))
+
+            prev_duration = issue['fields']['customfield_18400']
+            row_idx += 1
+        data.append(build_vfr_details('', row_idx, row_idx, issue))
+
+        row_idx += 1
+
+    update_cells_requests.append(build_auto_resize_details(0, 0, 3))
+
+    response = service.spreadsheets().batchUpdate(
+        spreadsheetId=spreadsheet_id,
+        body=update_cells).execute()
+
+    cli_library.echo('duration cell formats updated')
+
+    body = {
+        'valueInputOption': 'USER_ENTERED',
+        'data': data
+    }
+    result = service.spreadsheets().values().batchUpdate(
+        spreadsheetId=spreadsheet_id, body=body).execute()
+
+    cli_library.echo('duration cell data updated')
+
+
+def build_vfr_cost_of_delay_sheet(auth: ComboAuth, spreadsheet_id: int, service: Resource):
+    sheet_add = {
+        'requests': {
+            'addSheet': {
+                'properties': {
+                    'title': 'Cost of Delay'
+                }
+            }
+        }
+    }
+
+    add_response = service.spreadsheets().batchUpdate(
+        spreadsheetId=spreadsheet_id,
+        body=sheet_add).execute()
+
+    cli_library.echo('added cost of delay sheet')
+
+    cod_sheet_id = add_response['spreadsheetId']
+    cod_grid_id = add_response['replies'][0]['addSheet']['properties']['sheetId']
+
+    cli_library.echo('retrieving stories for cost of delay')
+
+    # retrieve stories ordered by cost of delay
+    jsonr = tasks.search_for_stories_ord_cod(auth)
+
+    cli_library.echo('cost of delay stories retrieved')
+
+    # build the data for the cost of delay sheet
+    data = [{'range': 'Cost of Delay!A1:D1',
+             'values': [['Cost of Delay', 'Issue key', 'Summary', 'Duration']]}]
+    row_idx = 2
+
+    # create an array of requests that will hold "updateCells" requests
+    # these are rows that will have the background color changed
+    update_cells_requests = []
+
+    update_cells = {
+        'requests': update_cells_requests
+    }
+
+    # create a var to hold the "previous" cod value
+    prev_cod = 0
+
+    cli_library.echo('generating cell data for cost of delay sheet')
+
+    for issue in jsonr['issues']:
+        # if idx > 2, then check to see if current duration val is different from "previous" val
+        # if so, then add an updateCells request and increment counter, then append row of data
+        # by default we always append a row of data
+        if row_idx == 2:
+            prev_cod = issue['fields']['customfield_18401']
+        if row_idx > 2 and issue['fields']['customfield_18401'] != prev_cod:
+            update_cells_requests.append(build_color_update_details(cod_grid_id, row_idx - 1, row_idx, 0, 5))
+
+            prev_cod = issue['fields']['customfield_18401']
+            row_idx += 1
+        data.append(build_vfr_details('Cost of Delay!', row_idx, row_idx, issue))
+
+        row_idx += 1
+
+    update_cells_requests.append(build_auto_resize_details(cod_grid_id, 0, 3))
+
+    response = service.spreadsheets().batchUpdate(
+        spreadsheetId=cod_sheet_id,
+        body=update_cells).execute()
+
+    cli_library.echo('cost of delay cell formats updated')
+
+    body = {
+        'valueInputOption': 'USER_ENTERED',
+        'data': data
+    }
+    result = service.spreadsheets().values().batchUpdate(
+        spreadsheetId=cod_sheet_id, body=body).execute()
+
+    cli_library.echo('cost of delay cell data updated')
