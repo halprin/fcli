@@ -157,7 +157,7 @@ class Issue:
         response.raise_for_status()
 
     def watch(self, username: str):
-        data = "\"{}\"".format(username)
+        request_body = json.dumps(username)
 
         response = requests.post('{}{}/watchers'.format(self.api_url, self.id), data=data,
                                  auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
