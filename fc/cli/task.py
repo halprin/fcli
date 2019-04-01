@@ -7,6 +7,7 @@ from . import cli_library
 from ..exceptions.task_exception import TaskException
 from requests import HTTPError
 
+
 @click.group()
 def task():
     pass
@@ -63,5 +64,5 @@ def watch(username: str, task_ids: tuple):
         try:
             the_task.watch(auth.username())
             cli_library.echo("Successfully added '{}' to {}".format(auth.username(), task_id))
-        except Exception as e:
+        except HTTPError as e:
             cli_library.fail_execution(2, 'Failed to modify watchlist for {}'.format(task_id))
