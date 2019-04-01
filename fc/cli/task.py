@@ -5,7 +5,7 @@ from ..auth.combo import ComboAuth
 from ..jira import tasks
 from . import cli_library
 from ..exceptions.task_exception import TaskException
-
+from requests import HTTPError
 
 @click.group()
 def task():
@@ -57,7 +57,7 @@ def watch(username: str, task_ids: tuple):
 
         try:
             the_task = Issue.get_issue(task_id, auth)
-        except Exception as e:
+        except HTTPError as e:
             cli_library.fail_execution(1, 'Issue retrieval failed with {}'.format(e))
 
         try:
