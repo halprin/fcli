@@ -4,6 +4,7 @@ from requests.auth import HTTPBasicAuth
 from ..auth.auth import Auth
 from typing import Optional
 from ..exceptions.task_exception import TaskException
+import json
 
 
 class Issue:
@@ -153,5 +154,12 @@ class Issue:
         }
 
         response = requests.post('{}{}/comment'.format(self.api_url, self.id), json=json,
+                                 auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
+        response.raise_for_status()
+
+    def watch(self, username: str):
+        request_body = json.dumps(username)
+
+        response = requests.post('{}{}/watchers'.format(self.api_url, self.id), data=request_body,
                                  auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
         response.raise_for_status()

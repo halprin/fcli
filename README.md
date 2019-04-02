@@ -109,6 +109,12 @@ To run the triage and EL task scoring process...
 $ fcli task score
 ```
 
+To add yourself to the watchlist for one or more tasks to receive notifications...
+
+```bash
+$ fcli task watch PROJECTA-1 PROJECTB-2
+```
+
 #### Other Backlog Functions
 
 To add a calculated VFR value to a story in the backlog and move it to Refined status...
