@@ -24,6 +24,8 @@ setup(
         'click',
         'requests',
         'click-datetime',
+        'google',
+        'google-api-python-client'
     ],
     entry_points='''
         [console_scripts]
