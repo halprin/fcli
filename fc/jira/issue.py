@@ -1,6 +1,8 @@
 import requests
 from requests import HTTPError
 from requests.auth import HTTPBasicAuth
+
+from fc.cli import cli_library
 from ..auth.auth import Auth
 from typing import Optional
 from ..exceptions.task_exception import TaskException
@@ -23,6 +25,7 @@ class Issue:
     summary_jira_field = 'summary'
     description_jira_field = 'description'
     project_jira_field = 'project'
+    score_jira_field = 'customfield_18402'
 
     def __init__(self):
         self.title = None
@@ -33,6 +36,7 @@ class Issue:
         self.state = None
         self.auth = None
         self.project = None
+        self.score_value = None
 
     @classmethod
     def from_json(cls, json: dict, auth: Auth):
@@ -45,6 +49,8 @@ class Issue:
         new_issue.state = json[cls.fields_jira_field]['status'][cls.name_jira_field]
         new_issue.auth = auth
         new_issue.project = json[cls.fields_jira_field][cls.project_jira_field][cls.key_jira_field]
+        new_issue.score_value = json[cls.fields_jira_field][cls.score_jira_field]
+        cli_library.echo('retrieved score field value {}'.format(new_issue.score_value))
 
         return new_issue
 

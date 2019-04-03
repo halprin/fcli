@@ -1,3 +1,4 @@
+from fc.cli import cli_library
 from .fcissue import FcIssue
 from datetime import datetime
 from ..auth.auth import Auth
@@ -113,10 +114,12 @@ class TriageTask(FcIssue):
     def type_str(self) -> str:
         return 'Triage'
 
-    def score(self) -> int:
+    def score(self) -> tuple:
         score = self._calculate_score()
-        self._update_triage_vfr(score)
-        return score
+        self._update_triage_vfr(score)\
+            if self.score_value is None or self.score_value != score\
+            else cli_library.echo('not updating score for {} as new score is same'.format(self.id))
+        return score, self.score_value != score
 
     def _calculate_score(self) -> int:
 
