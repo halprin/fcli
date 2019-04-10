@@ -33,8 +33,6 @@ def score_triage_and_el_tasks(auth: Auth):
     if len(scoring_results_exception) > 0:
         cli_library.fail_execution(1, 'Task scoring failed')
 
-    scoring_results = [scoring_result for scoring_result in scoring_results if
-                       scoring_result is not None and not isinstance(scoring_result, Exception)]
     cli_library.echo('Tasks: {}, Task scoring results updated: {}'.
                      format(len(raw_tasks['issues']),
                             {i: scoring_results.count(i) for i in scoring_results}))
