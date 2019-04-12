@@ -3,6 +3,7 @@ from ..auth.auth import Auth
 import requests
 from requests.auth import HTTPBasicAuth
 from ..exceptions.task_exception import TaskException
+from typing import Tuple
 
 
 class BacklogStory(BacklogIssue):
@@ -48,27 +49,33 @@ class BacklogStory(BacklogIssue):
         # fill in for the ac field
         existing_json[self.fields_jira_field][self._acceptance_criteria_jira_field] = self.acceptance_criteria
 
-    def score(self) -> float:
+    def score(self) -> Tuple:
 
         if self.type != self._story_type_str:
             raise TaskException('Invalid type: Can only add VFR to Story types')
 
         vfr_value = round(self.cost_of_delay / self.duration, 2)
 
-        # store vfr, duration, cost of delay
-        json = {
-            self.fields_jira_field: {
-                'customfield_18402': vfr_value,
-                'customfield_18400': self.duration,
-                'customfield_18401': self.cost_of_delay
+        if self.score_value != vfr_value:
+
+            # store vfr, duration, cost of delay
+            json = {
+                self.fields_jira_field: {
+                    'customfield_18402': vfr_value,
+                    'customfield_18400': self.duration,
+                    'customfield_18401': self.cost_of_delay
+                }
             }
-        }
 
-        response = requests.put(self.api_url + self.id, json=json,
-                                auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
-        response.raise_for_status()
+            response = requests.put(self.api_url + self.id, json=json,
+                                    auth=HTTPBasicAuth(self.auth.username(), self.auth.password()))
+            response.raise_for_status()
 
-        # transition to Refined
-        self.transition('Refined')
+            # transition to Refined
+            self.transition('Refined')
 
-        return vfr_value
+            updated = True
+        else:
+            updated = False
+
+        return vfr_value, updated

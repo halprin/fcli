@@ -33,15 +33,25 @@ def score_triage_and_el_tasks(auth: Auth):
     if len(scoring_results_exception) > 0:
         cli_library.fail_execution(1, 'Task scoring failed')
 
+    cli_library.echo('Tasks: {}, Task scoring results updated: {}'.
+                     format(len(raw_tasks['issues']),
+                            {i: scoring_results.count(i) for i in scoring_results}))
+
 
 async def _score_triage_and_el_task(task_key: str, auth: Auth):
     loop = asyncio.get_event_loop()
     with ThreadPoolExecutor() as executor:
         cli_library.echo('Retrieving {}'.format(task_key))
         scorable_task = await loop.run_in_executor(executor, issue.Issue.get_issue, task_key, auth)
-        task_score = await loop.run_in_executor(executor, scorable_task.score)
+        task_score, updated = await loop.run_in_executor(executor, scorable_task.score)
+        if updated:
+            update_string = 'updated'
+        else:
+            update_string = 'not updated (same score)'
         cli_library.echo(
-            "{} task's VFR updated with {} for {}".format(scorable_task.type_str(), task_score, scorable_task.id))
+            "{} task's VFR {} with {} for {}".format(scorable_task.type_str(), update_string, task_score,
+                                                     scorable_task.id))
+        return updated
 
 
 def _search_for_triage_and_el(auth: Auth) -> dict:

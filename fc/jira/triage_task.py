@@ -1,8 +1,10 @@
+from fc.cli import cli_library
 from .fcissue import FcIssue
 from datetime import datetime
 from ..auth.auth import Auth
 import requests
 from requests.auth import HTTPBasicAuth
+from typing import Tuple
 
 
 class TriageTask(FcIssue):
@@ -113,10 +115,13 @@ class TriageTask(FcIssue):
     def type_str(self) -> str:
         return 'Triage'
 
-    def score(self) -> int:
+    def score(self) -> Tuple:
         score = self._calculate_score()
-        self._update_triage_vfr(score)
-        return score
+
+        if self.score_value is None or self.score_value != score:
+            self._update_triage_vfr(score)
+
+        return score, self.score_value != score
 
     def _calculate_score(self) -> int:
 
