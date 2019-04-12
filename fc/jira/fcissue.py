@@ -22,12 +22,6 @@ class FcIssue(Issue):
 
         return new_issue
 
-    @classmethod
-    def from_args(cls, title: str, description: str, auth: Auth):
-        new_story = super(FcIssue, cls).from_args(title, description, auth)
-
-        return new_story
-
     def transition(self, state: str):
 
         # use created Task (could be Backlog task or Triage task) to transition to desired state

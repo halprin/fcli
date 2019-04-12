@@ -117,7 +117,9 @@ class TriageTask(FcIssue):
 
     def score(self) -> Tuple:
         score = self._calculate_score()
-        self._update_triage_vfr(score) if self.score_value is None or self.score_value != score else None
+
+        if self.score_value is None or self.score_value != score:
+            self._update_triage_vfr(score)
 
         return score, self.score_value != score
 
