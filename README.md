@@ -104,9 +104,34 @@ To move a task from one status to another...
 $ fcli task move <task key> <target status>
 ```
 
+Valid task statuses are:
+```
+Open, Ready, In Progress, Blocked, Closed, Triage, Ready for Refinement, Needs Work, Refined, Socialize, Reopened, Resolved
+```
+
+If the status chosen is more than a single word, surround the status in quotes like:
+```bash
+$ fcli task move <task key> 'In Progress'
+```
+
+If you are moving a task to either `Resolved` or `Closed` status, you are required to enter a `Resolution` and an optional comment:
+```bash
+$ fcli task move <task key> Resolved --comment 'This is an optional comment'
+Please enter a resolution (Fixed, Duplicate, Done, Won't Do):
+```
+
+Though there are other resolutions that can be chosen, these are the most common resolutions and the only ones accepted.
+
 To run the triage and EL task scoring process...
 ```bash
 $ fcli task score
+```
+
+You will see the list of issues that are being updated as well as notification as to whether a particular issue is being
+updated or not.  The final output of this command will display the total number of tasks and how many were updated and
+not updated:
+```bash
+Tasks: 92, Task scoring results updated: {False: 39, True: 53}
 ```
 
 To add yourself to the watchlist for one or more tasks to receive notifications...
