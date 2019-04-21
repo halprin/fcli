@@ -5,7 +5,6 @@ from ..auth.auth import Auth
 import requests
 from requests.auth import HTTPBasicAuth
 from typing import Tuple
-from typing import Sequence
 
 
 class TriageTask(FcIssue):
