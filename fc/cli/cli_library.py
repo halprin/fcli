@@ -1,5 +1,5 @@
 import click
-
+from typing import Sequence
 
 _progress_bars = {}
 
@@ -26,3 +26,12 @@ def fail_execution(return_code: int, error_string: str):
     exit_exception = click.ClickException(error_string)
     exit_exception.exit_code = return_code
     raise exit_exception
+
+
+# This allows us to call up a click prompt from different parts of the flow
+def prompt(the_prompt: str, choices: Sequence[str]) -> str:
+
+    if choices is None:
+        return click.prompt(the_prompt)
+    else:
+        return click.prompt(the_prompt, type=click.Choice(choices))

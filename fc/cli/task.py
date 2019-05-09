@@ -17,8 +17,14 @@ def task():
 @click.option('--username')
 @click.argument('task_id')
 @click.argument('state')
-def move(username: str, task_id: str, state: str):
-    cli_library.echo('Transitioning task')
+@click.option('--resolution')
+@click.option('--comment')
+def move(username: str, task_id: str, state: str, resolution: str, comment: str):
+
+    if state in ['Resolved', 'Closed']:
+        if resolution is None:
+            resolution = cli_library.prompt('Please enter a resolution',
+                                            ['Fixed', 'Duplicate', 'Done', 'Won\'t Do'])
 
     auth = ComboAuth(username)
 
@@ -31,7 +37,7 @@ def move(username: str, task_id: str, state: str):
         cli_library.fail_execution(1, 'Task search failed with {}'.format(exception))
 
     if the_task is not None:
-        the_task.transition(state)
+        the_task.transition(state, resolution, comment)
         cli_library.echo('Successfully transitioned {} to state {}'.format(task_id, state))
     else:
         cli_library.fail_execution(2, 'Failed to retrieve a task for key {}'.format(task_id))

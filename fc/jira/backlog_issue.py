@@ -135,7 +135,9 @@ class BacklogIssue(FcIssue):
                  'Refined': [171, 291, 231, 201, 211],  # Reo -> IP -> Read -> NW -> RfR -> Ref
                  'In Progress': [171],  # Reopened -> In Progress
                  'Blocked': [171, 241],  # Reopened -> In Progress -> Blocked
-                 'Closed': [161]}  # Reopened -> Closed
+                 'Closed': [161]},  # Reopened -> Closed
+        'Resolved': {
+                 'Closed': [71]}  # Resolved -> Closed
     }
 
     def _get_transition_dict(self) -> dict:
