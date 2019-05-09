@@ -24,7 +24,7 @@ def move(username: str, task_id: str, state: str, resolution: str, comment: str)
     if state in ['Resolved', 'Closed']:
         if resolution is None:
             resolution = cli_library.prompt('Please enter a resolution',
-                                                ['Fixed', 'Duplicate', 'Done', 'Won\'t Do'])
+                                            ['Fixed', 'Duplicate', 'Done', 'Won\'t Do'])
 
     auth = ComboAuth(username)
 
