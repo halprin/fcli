@@ -5,6 +5,7 @@ from ..jira import tasks
 from requests.exceptions import HTTPError
 from ..auth.combo import ComboAuth
 import click_datetime
+from . import cli_library
 
 
 @click.group()
@@ -26,14 +27,14 @@ def create(title, description, username, in_progress, no_assign, importance, eff
 
     auth = ComboAuth(username)
 
-    new_task = TriageTask(title, description, in_progress, no_assign, importance, effort, due, auth)
+    new_task = TriageTask.from_args(title, description, in_progress, no_assign, importance, effort, due, auth)
     try:
         task_id, url = new_task.create()
         click.echo('Triage task {} added at {}'.format(task_id, url))
         if in_progress:
             click.echo('Triage task put into In Progress')
     except HTTPError as exception:
-        click.echo('Triage task creation failed with {}'.format(exception))
+        cli_library.fail_execution(1, 'Triage task creation failed with {}'.format(exception))
 
 
 @triage.command()
@@ -44,24 +45,7 @@ def search(username):
     auth = ComboAuth(username)
 
     try:
-        triage_tasks = tasks.triage_search(auth)
-        click.echo('Triage tasks: {}'.format(json.dumps(triage_tasks, indent=4)))
+        triage_tasks_raw = tasks.search_for_triage(auth)
+        click.echo('Triage tasks: {}'.format(json.dumps(triage_tasks_raw, indent=4)))
     except HTTPError as exception:
-        click.echo('Task search failed with {}'.format(exception))
-
-
-@triage.command()
-@click.option('--username')
-def score(username):
-    click.echo('Scoring triage tasks')
-
-    auth = ComboAuth(username)
-
-    try:
-        triage_tasks = tasks.triage_search(auth)
-        for task in triage_tasks['issues']:
-            click.echo('Generating score for task {}'.format(task['key']))
-            score = tasks.score(task, auth)
-            click.echo('Triage task VFR updated with {} for {}'.format(score, task['key']))
-    except HTTPError as exception:
-        click.echo('Task search failed with {}'.format(exception))
+        cli_library.fail_execution(1, 'Task search failed with {}'.format(exception))
